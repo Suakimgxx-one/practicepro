@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     S3_BUCKET: str | None = None
     S3_ENDPOINT_URL: str | None = None
 
+    # Upload validation
+    MAX_UPLOAD_SIZE_MB: int = 50
+    ALLOWED_AUDIO_EXTENSIONS: set[str] = {".wav", ".mp3", ".m4a", ".flac", ".ogg"}
+
     # LLM
     ANTHROPIC_API_KEY: str | None = None
     FEEDBACK_MODEL: str = "claude-sonnet-4-6"

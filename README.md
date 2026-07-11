@@ -56,4 +56,3 @@ See project roadmap. Each milestone is independently testable:
 11. Frontend — core flow
 12. Frontend — visualization
 13. Integration + deployment
-# practicepro

@@ -23,6 +23,8 @@ class Feedback(Base):
         nullable=False,
     )
     text: Mapped[str] = mapped_column(Text, nullable=False)
+    # Timestamp (seconds, in aligned/reference time) that this feedback
+    # item refers to — lets the frontend jump the playhead to it.
     timestamp_reference: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

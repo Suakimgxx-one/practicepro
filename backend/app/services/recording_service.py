@@ -1,11 +1,13 @@
 import uuid
 
+from fastapi import UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import NotFoundError
-from app.models.recording import Recording
+from app.core.exceptions import InvalidAudioError, NotFoundError, RecordingConflictError
+from app.models.recording import Recording, RecordingStatus
 from app.schemas.recording import RecordingCreate
+from app.services import audio_service, storage_service
 
 
 async def create_recording(db: AsyncSession, payload: RecordingCreate) -> Recording:
@@ -39,3 +41,36 @@ async def list_recordings_for_user(
         .offset(offset)
     )
     return list(result.scalars().all())
+
+
+async def process_upload(
+    db: AsyncSession, recording: Recording, upload_file: UploadFile
+) -> Recording:
+    """
+    Orchestrates: save file to disk -> validate it's real decodable audio
+    -> update the recording row (storage_path, duration_seconds, status).
+
+    On validation failure, the partially-saved file is cleaned up and the
+    recording is marked FAILED rather than left PENDING — the row still
+    tells you something was attempted and why it didn't work.
+    """
+    if recording.status == RecordingStatus.READY:
+        raise RecordingConflictError(str(recording.id))
+
+    destination = await storage_service.save_upload(recording.id, upload_file)
+
+    try:
+        duration = await audio_service.probe_duration(destination)
+    except InvalidAudioError:
+        storage_service.delete_file(destination)
+        recording.status = RecordingStatus.FAILED
+        await db.commit()
+        await db.refresh(recording)
+        raise
+
+    recording.storage_path = str(destination)
+    recording.duration_seconds = duration
+    recording.status = RecordingStatus.READY
+    await db.commit()
+    await db.refresh(recording)
+    return recording

@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, File, UploadFile, status
 
 from app.api.deps import DBSession, PaginationParams
 from app.schemas.recording import RecordingCreate, RecordingRead
@@ -14,8 +14,7 @@ async def create_recording(payload: RecordingCreate, db: DBSession) -> Recording
     """
     Registers recording metadata. Does NOT accept audio bytes or trigger
     YouTube download — this just creates the row with status=PENDING.
-    Milestone 3 adds the upload endpoint; Milestone 4 adds the YouTube
-    ingestion job. Both will transition this row's status forward.
+    Milestone 4 adds the YouTube ingestion job for source=youtube rows.
     """
     return await recording_service.create_recording(db, payload)
 
@@ -34,3 +33,21 @@ async def list_recordings(
     return await recording_service.list_recordings_for_user(
         db, user_id, pagination.limit, pagination.offset
     )
+
+
+@router.post("/{recording_id}/upload", response_model=RecordingRead)
+async def upload_recording_audio(
+    recording_id: uuid.UUID,
+    db: DBSession,
+    file: UploadFile = File(...),
+) -> RecordingRead:
+    """
+    Accepts a multipart audio file for a recording created with
+    source=upload. Validates file type, size, and actual decodability;
+    on success the recording transitions to status=ready with
+    storage_path and duration_seconds populated. On invalid audio, the
+    recording transitions to status=failed (not left pending) and a 422
+    is returned.
+    """
+    recording = await recording_service.get_recording(db, recording_id)
+    return await recording_service.process_upload(db, recording, file)

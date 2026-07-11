@@ -7,6 +7,17 @@ from app.models.recording import RecordingSource, RecordingStatus, RecordingType
 
 
 class RecordingCreate(BaseModel):
+    """
+    Request body for registering a new recording. Note: this only creates
+    the DB row / metadata. The actual audio bytes (upload) or the YouTube
+    ingestion job are handled by dedicated endpoints in Milestone 3 & 4 —
+    this schema exists now so the API shape is settled early.
+    """
+
+    # NOTE: no auth system exists yet, so user_id is passed explicitly here.
+    # Once auth lands, this will be dropped in favor of an authenticated
+    # `current_user` dependency and this field will be removed from the
+    # public request schema.
     user_id: uuid.UUID
     type: RecordingType
     source: RecordingSource
