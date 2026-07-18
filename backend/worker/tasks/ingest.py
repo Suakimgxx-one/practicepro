@@ -33,11 +33,16 @@ def _download_audio(source_url: str, dest_dir: Path) -> Path:
             {
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "wav",
-            }
-        ],
-        "quiet": True,
-        "no_warnings": True,
-        "noplaylist": True,
+	    }
+	],
+	"quiet": True,
+	"no_warnings": True,
+	"noplaylist": True,
+	"extractor_args": {
+		"youtube": {
+			"player_client" : ["android", "ios", "web"],
+		}
+	},
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
