@@ -1,6 +1,8 @@
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
@@ -27,3 +29,11 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency: yields a DB session per-request, closes it after."""
     async with AsyncSessionLocal() as session:
         yield session
+
+
+# --- Sync engine for Celery worker tasks ---
+# Celery's default prefork worker model runs tasks as plain synchronous
+# Python, not inside an asyncio event loop, so tasks use a separate sync
+# engine/session rather than trying to bridge into the async one.
+sync_engine = create_engine(settings.DATABASE_URL_SYNC, pool_pre_ping=True)
+SyncSessionLocal = sessionmaker(bind=sync_engine, expire_on_commit=False)

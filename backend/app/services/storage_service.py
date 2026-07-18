@@ -1,4 +1,3 @@
-import os
 import uuid
 from pathlib import Path
 
@@ -7,11 +6,10 @@ from fastapi import UploadFile
 from app.core.config import settings
 from app.core.exceptions import FileTooLargeError, UnsupportedFileTypeError
 
-CHUNK_SIZE = 1024 * 1024  # 1MB per read, avoids loading the whole file into memory
+CHUNK_SIZE = 1024 * 1024
 
 
 def validate_extension(filename: str) -> str:
-    """Returns the lowercase extension if allowed, else raises."""
     extension = Path(filename).suffix.lower()
     if extension not in settings.ALLOWED_AUDIO_EXTENSIONS:
         raise UnsupportedFileTypeError(extension, settings.ALLOWED_AUDIO_EXTENSIONS)
@@ -19,11 +17,6 @@ def validate_extension(filename: str) -> str:
 
 
 async def save_upload(recording_id: uuid.UUID, upload_file: UploadFile) -> Path:
-    """
-    Streams the upload to disk in chunks, enforcing MAX_UPLOAD_SIZE_MB
-    without ever holding the full file in memory. Raises FileTooLargeError
-    and removes the partial file if the limit is exceeded.
-    """
     extension = validate_extension(upload_file.filename or "")
 
     recording_dir = Path(settings.LOCAL_STORAGE_PATH) / str(recording_id)
@@ -49,8 +42,7 @@ async def save_upload(recording_id: uuid.UUID, upload_file: UploadFile) -> Path:
 
 def delete_file(path: Path) -> None:
     path.unlink(missing_ok=True)
-    # Clean up the now-empty recording directory, if any.
     try:
         path.parent.rmdir()
     except OSError:
-        pass  # not empty, or already gone — fine either way
+        pass

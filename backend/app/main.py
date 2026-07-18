@@ -30,9 +30,7 @@ async def not_found_handler(request: Request, exc: NotFoundError) -> JSONRespons
 
 
 @app.exception_handler(UnsupportedFileTypeError)
-async def unsupported_file_type_handler(
-    request: Request, exc: UnsupportedFileTypeError
-) -> JSONResponse:
+async def unsupported_file_type_handler(request: Request, exc: UnsupportedFileTypeError) -> JSONResponse:
     return JSONResponse(status_code=415, content={"detail": str(exc)})
 
 
@@ -47,9 +45,7 @@ async def invalid_audio_handler(request: Request, exc: InvalidAudioError) -> JSO
 
 
 @app.exception_handler(RecordingConflictError)
-async def recording_conflict_handler(
-    request: Request, exc: RecordingConflictError
-) -> JSONResponse:
+async def recording_conflict_handler(request: Request, exc: RecordingConflictError) -> JSONResponse:
     return JSONResponse(status_code=409, content={"detail": str(exc)})
 
 

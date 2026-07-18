@@ -12,9 +12,11 @@ router = APIRouter(prefix="/recordings", tags=["recordings"])
 @router.post("", response_model=RecordingRead, status_code=status.HTTP_201_CREATED)
 async def create_recording(payload: RecordingCreate, db: DBSession) -> RecordingRead:
     """
-    Registers recording metadata. Does NOT accept audio bytes or trigger
-    YouTube download — this just creates the row with status=PENDING.
-    Milestone 4 adds the YouTube ingestion job for source=youtube rows.
+    Registers recording metadata. For source=upload, the row is created
+    with status=pending and waits for the /upload endpoint. For
+    source=youtube, creation automatically enqueues a background job
+    (Celery) that downloads, validates, and transitions the row through
+    processing -> ready/failed.
     """
     return await recording_service.create_recording(db, payload)
 
@@ -44,10 +46,7 @@ async def upload_recording_audio(
     """
     Accepts a multipart audio file for a recording created with
     source=upload. Validates file type, size, and actual decodability;
-    on success the recording transitions to status=ready with
-    storage_path and duration_seconds populated. On invalid audio, the
-    recording transitions to status=failed (not left pending) and a 422
-    is returned.
+    on success the recording transitions to status=ready.
     """
     recording = await recording_service.get_recording(db, recording_id)
     return await recording_service.process_upload(db, recording, file)

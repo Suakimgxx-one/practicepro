@@ -4,14 +4,6 @@ from app.models.analysis import AnalysisSession, AnalysisResult, SessionStatus, 
 from app.models.feedback import Feedback
 
 __all__ = [
-    "User",
-    "Recording",
-    "RecordingType",
-    "RecordingSource",
-    "RecordingStatus",
-    "AnalysisSession",
-    "AnalysisResult",
-    "SessionStatus",
-    "AnalysisCategory",
-    "Feedback",
+    "User", "Recording", "RecordingType", "RecordingSource", "RecordingStatus",
+    "AnalysisSession", "AnalysisResult", "SessionStatus", "AnalysisCategory", "Feedback",
 ]

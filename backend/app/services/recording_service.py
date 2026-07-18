@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import InvalidAudioError, NotFoundError, RecordingConflictError
-from app.models.recording import Recording, RecordingStatus
+from app.models.recording import Recording, RecordingSource, RecordingStatus
 from app.schemas.recording import RecordingCreate
 from app.services import audio_service, storage_service
 
@@ -20,6 +20,15 @@ async def create_recording(db: AsyncSession, payload: RecordingCreate) -> Record
     db.add(recording)
     await db.commit()
     await db.refresh(recording)
+
+    if recording.source == RecordingSource.YOUTUBE:
+        # Imported here (not at module top) to avoid a hard import-time
+        # dependency from app -> worker for every request; only paid for
+        # when actually creating a youtube-source recording.
+        from worker.tasks.ingest import process_youtube_recording
+
+        process_youtube_recording.delay(str(recording.id))
+
     return recording
 
 
@@ -49,10 +58,6 @@ async def process_upload(
     """
     Orchestrates: save file to disk -> validate it's real decodable audio
     -> update the recording row (storage_path, duration_seconds, status).
-
-    On validation failure, the partially-saved file is cleaned up and the
-    recording is marked FAILED rather than left PENDING — the row still
-    tells you something was attempted and why it didn't work.
     """
     if recording.status == RecordingStatus.READY:
         raise RecordingConflictError(str(recording.id))

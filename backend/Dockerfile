@@ -1,6 +1,5 @@
 FROM python:3.11-slim
 
-# ffmpeg is required by librosa/soundfile/yt-dlp for audio decoding
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     build-essential \

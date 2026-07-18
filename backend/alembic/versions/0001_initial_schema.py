@@ -49,35 +49,18 @@ def upgrade() -> None:
         "analysis_sessions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=False),
-        sa.Column(
-            "reference_recording_id",
-            postgresql.UUID(as_uuid=True),
-            sa.ForeignKey("recordings.id"),
-            nullable=False,
-        ),
-        sa.Column(
-            "student_recording_id",
-            postgresql.UUID(as_uuid=True),
-            sa.ForeignKey("recordings.id"),
-            nullable=False,
-        ),
+        sa.Column("reference_recording_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("recordings.id"), nullable=False),
+        sa.Column("student_recording_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("recordings.id"), nullable=False),
         sa.Column("status", session_status, nullable=False, server_default="pending"),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
 
-    analysis_category = postgresql.ENUM(
-        "pitch", "rhythm", "tempo", "dynamics", name="analysiscategory"
-    )
+    analysis_category = postgresql.ENUM("pitch", "rhythm", "tempo", "dynamics", name="analysiscategory")
 
     op.create_table(
         "analysis_results",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column(
-            "session_id",
-            postgresql.UUID(as_uuid=True),
-            sa.ForeignKey("analysis_sessions.id"),
-            nullable=False,
-        ),
+        sa.Column("session_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("analysis_sessions.id"), nullable=False),
         sa.Column("category", analysis_category, nullable=False),
         sa.Column("data", postgresql.JSONB, nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
@@ -86,12 +69,7 @@ def upgrade() -> None:
     op.create_table(
         "feedback",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column(
-            "session_id",
-            postgresql.UUID(as_uuid=True),
-            sa.ForeignKey("analysis_sessions.id"),
-            nullable=False,
-        ),
+        sa.Column("session_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("analysis_sessions.id"), nullable=False),
         sa.Column("category", analysis_category, nullable=False),
         sa.Column("text", sa.Text, nullable=False),
         sa.Column("timestamp_reference", sa.Float, nullable=True),

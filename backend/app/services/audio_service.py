@@ -6,13 +6,17 @@ import librosa
 from app.core.exceptions import InvalidAudioError
 
 
-def _probe_sync(path: str) -> float:
+def probe_duration_sync(path: str) -> float:
     """
     Actually decodes the audio (not just reading a header) to confirm the
     file is real, playable audio — catches truncated uploads, misnamed
     non-audio files, and corrupt encodes that a header-only check would
     miss. librosa.load uses ffmpeg as a backend for compressed formats
     (mp3/m4a), which is why the Dockerfile installs it.
+
+    This is the synchronous core, exported directly (not just wrapped)
+    because the Celery worker calls it from plain sync task code and
+    shouldn't have to go through the async wrapper below.
     """
     try:
         waveform, sample_rate = librosa.load(path, sr=None, mono=True)
@@ -31,4 +35,4 @@ async def probe_duration(path: Path) -> float:
     block the async event loop — this is a synchronous, CPU-bound
     operation being called from an async route handler.
     """
-    return await anyio.to_thread.run_sync(_probe_sync, str(path))
+    return await anyio.to_thread.run_sync(probe_duration_sync, str(path))

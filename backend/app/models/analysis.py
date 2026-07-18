@@ -27,16 +27,10 @@ class AnalysisCategory(str, enum.Enum):
 class AnalysisSession(Base):
     __tablename__ = "analysis_sessions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    reference_recording_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("recordings.id"), nullable=False
-    )
-    student_recording_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("recordings.id"), nullable=False
-    )
+    reference_recording_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("recordings.id"), nullable=False)
+    student_recording_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("recordings.id"), nullable=False)
     status: Mapped[SessionStatus] = mapped_column(
         Enum(SessionStatus, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         default=SessionStatus.PENDING,
@@ -52,19 +46,12 @@ class AnalysisSession(Base):
 class AnalysisResult(Base):
     __tablename__ = "analysis_results"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    session_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("analysis_sessions.id"), nullable=False
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("analysis_sessions.id"), nullable=False)
     category: Mapped[AnalysisCategory] = mapped_column(
         Enum(AnalysisCategory, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
     )
-    # Structured output from the analysis engine (curves, stats, flagged
-    # regions). Stored as JSONB rather than a time-series DB — see
-    # architecture notes for why this fits the data volume here.
     data: Mapped[dict] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

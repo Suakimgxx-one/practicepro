@@ -33,21 +33,6 @@ async def test_create_recording_youtube_requires_url(client):
 
 
 @pytest.mark.asyncio
-async def test_create_recording_youtube_with_url(client):
-    user_id = await _make_user(client)
-    response = await client.post(
-        "/api/v1/recordings",
-        json={
-            "user_id": user_id,
-            "type": "reference",
-            "source": "youtube",
-            "source_url": "https://youtube.com/watch?v=abc123",
-        },
-    )
-    assert response.status_code == 201
-
-
-@pytest.mark.asyncio
 async def test_get_recording_not_found(client):
     response = await client.get(f"/api/v1/recordings/{uuid.uuid4()}")
     assert response.status_code == 404

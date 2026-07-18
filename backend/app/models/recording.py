@@ -29,9 +29,7 @@ class RecordingStatus(str, enum.Enum):
 class Recording(Base):
     __tablename__ = "recordings"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
 
     type: Mapped[RecordingType] = mapped_column(
