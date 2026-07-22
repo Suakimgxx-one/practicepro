@@ -33,16 +33,23 @@ def _download_audio(source_url: str, dest_dir: Path) -> Path:
             {
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "wav",
-	    }
-	],
-	"quiet": True,
-	"no_warnings": True,
-	"noplaylist": True,
-	"extractor_args": {
-		"youtube": {
-			"player_client" : ["android", "ios", "web"],
-		}
-	},
+            }
+        ],
+        "quiet": True,
+        "no_warnings": True,
+        "noplaylist": True,
+        # YouTube has been aggressively rate-limiting/blocking (HTTP 403)
+        # requests that look like they're using yt-dlp's default "web"
+        # player client, especially from datacenter/cloud IPs. Falling
+        # back through android -> ios player clients works around this as
+        # of mid-2026; this is an active cat-and-mouse situation between
+        # yt-dlp and YouTube, so this list may need updating again later
+        # if YouTube changes its blocking behavior further.
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "ios", "web"],
+            }
+        },
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
