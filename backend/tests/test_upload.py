@@ -19,7 +19,6 @@ async def _make_user_and_upload_recording(client) -> tuple[str, str]:
     email = f"test-{uuid.uuid4().hex[:8]}@example.com"
     user_resp = await client.post("/api/v1/users", json={"email": email})
     user_id = user_resp.json()["id"]
-
     recording_resp = await client.post(
         "/api/v1/recordings",
         json={"user_id": user_id, "type": "student", "source": "upload"},
@@ -31,12 +30,10 @@ async def _make_user_and_upload_recording(client) -> tuple[str, str]:
 async def test_upload_valid_audio(client):
     _, recording_id = await _make_user_and_upload_recording(client)
     wav_bytes = _make_wav_bytes()
-
     response = await client.post(
         f"/api/v1/recordings/{recording_id}/upload",
         files={"file": ("test.wav", wav_bytes, "audio/wav")},
     )
-
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ready"
@@ -47,26 +44,21 @@ async def test_upload_valid_audio(client):
 @pytest.mark.asyncio
 async def test_upload_rejects_bad_extension(client):
     _, recording_id = await _make_user_and_upload_recording(client)
-
     response = await client.post(
         f"/api/v1/recordings/{recording_id}/upload",
         files={"file": ("test.txt", b"not audio", "text/plain")},
     )
-
     assert response.status_code == 415
 
 
 @pytest.mark.asyncio
 async def test_upload_rejects_corrupt_audio(client):
     _, recording_id = await _make_user_and_upload_recording(client)
-
     response = await client.post(
         f"/api/v1/recordings/{recording_id}/upload",
         files={"file": ("test.wav", b"this is not really a wav file" * 100, "audio/wav")},
     )
-
     assert response.status_code == 422
-
     check = await client.get(f"/api/v1/recordings/{recording_id}")
     assert check.json()["status"] == "failed"
 
@@ -75,13 +67,11 @@ async def test_upload_rejects_corrupt_audio(client):
 async def test_upload_rejects_when_already_ready(client):
     _, recording_id = await _make_user_and_upload_recording(client)
     wav_bytes = _make_wav_bytes()
-
     first = await client.post(
         f"/api/v1/recordings/{recording_id}/upload",
         files={"file": ("test.wav", wav_bytes, "audio/wav")},
     )
     assert first.status_code == 200
-
     second = await client.post(
         f"/api/v1/recordings/{recording_id}/upload",
         files={"file": ("test.wav", wav_bytes, "audio/wav")},

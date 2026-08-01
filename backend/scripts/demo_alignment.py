@@ -1,19 +1,9 @@
 """
 Demo script: aligns two real audio files and prints the resulting
-timestamp mapping, so you can see DTW alignment working on something
-real rather than only synthetic test tones.
+timestamp mapping.
 
 Usage (from inside the api container):
     PYTHONPATH=. python3 scripts/demo_alignment.py <reference_audio_path> <student_audio_path>
-
-(PYTHONPATH=. is needed so the analysis_engine package, which lives at
-the backend root, is importable — otherwise Python only looks in the
-scripts/ folder itself.)
-
-Both paths must be readable from inside the container. If you've
-already uploaded recordings via the API, their files live under
-/data/audio/<recording_id>/original.<ext> — that path is directly
-usable here since it's the same volume the container sees.
 """
 import sys
 
@@ -36,7 +26,7 @@ def main() -> None:
     student_waveform, student_sr = load_audio(student_path)
     print(f"  -> {len(student_waveform) / student_sr:.2f}s at {student_sr}Hz")
 
-    print("\nRunning DTW alignment (this can take a few seconds for longer clips)...")
+    print("\nRunning DTW alignment...")
     result = align(reference_waveform, reference_sr, student_waveform, student_sr)
 
     print(f"\nTotal alignment cost: {result.cost:.2f} (lower = more similar note sequences)")

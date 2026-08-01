@@ -1,6 +1,6 @@
 """
 Demo script: aligns two real audio files and compares their pitch,
-printing out flagged (out-of-tune) regions.
+printing flagged (out-of-tune) regions.
 
 Usage (from inside the api container):
     PYTHONPATH=. python3 scripts/demo_pitch.py <reference_audio_path> <student_audio_path>
@@ -28,7 +28,7 @@ def main() -> None:
     print("\nAligning performances...")
     alignment = align(reference_waveform, reference_sr, student_waveform, student_sr)
 
-    print("Extracting pitch contours (this can take a little while)...")
+    print("Extracting pitch contours...")
     reference_pitch = extract_pitch_contour(reference_waveform, reference_sr)
     student_pitch = extract_pitch_contour(student_waveform, student_sr)
 

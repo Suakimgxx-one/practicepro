@@ -13,16 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 def _download_audio(source_url: str, dest_dir: Path) -> Path:
-    """
-    Downloads and extracts audio from a YouTube URL via yt-dlp, converting
-    to WAV so it flows through the exact same validation/duration path as
-    a direct upload (one code path for "is this real audio", regardless
-    of where the bytes came from).
-
-    Deliberately isolated from Celery/DB concerns — this function takes a
-    URL and a directory, returns a path. That makes it trivially mockable
-    in tests without needing a real network call or a running worker.
-    """
     dest_dir.mkdir(parents=True, exist_ok=True)
     output_template = str(dest_dir / "original.%(ext)s")
 
@@ -38,13 +28,6 @@ def _download_audio(source_url: str, dest_dir: Path) -> Path:
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
-        # YouTube has been aggressively rate-limiting/blocking (HTTP 403)
-        # requests that look like they're using yt-dlp's default "web"
-        # player client, especially from datacenter/cloud IPs. Falling
-        # back through android -> ios player clients works around this as
-        # of mid-2026; this is an active cat-and-mouse situation between
-        # yt-dlp and YouTube, so this list may need updating again later
-        # if YouTube changes its blocking behavior further.
         "extractor_args": {
             "youtube": {
                 "player_client": ["android", "ios", "web"],
@@ -63,11 +46,6 @@ def _download_audio(source_url: str, dest_dir: Path) -> Path:
 
 @celery_app.task(name="ingest.process_youtube_recording", bind=True, max_retries=2)
 def process_youtube_recording(self, recording_id: str) -> None:
-    """
-    Full lifecycle for a YouTube-sourced recording: pending -> processing
-    -> (ready | failed). Uses a plain sync DB session since Celery's
-    default prefork worker runs tasks outside any asyncio event loop.
-    """
     session = SyncSessionLocal()
     try:
         recording = session.get(Recording, recording_id)
@@ -84,11 +62,6 @@ def process_youtube_recording(self, recording_id: str) -> None:
             audio_path = _download_audio(recording.source_url, dest_dir)
             duration = probe_duration_sync(str(audio_path))
         except Exception:
-            # Covers yt-dlp failures (private/deleted/geo-blocked videos,
-            # network errors) and audio validation failures alike — any
-            # of these means the recording didn't make it to a usable
-            # state, so it's marked failed rather than left stuck in
-            # "processing" forever.
             logger.exception("YouTube ingestion failed for recording %s", recording_id)
             recording.status = RecordingStatus.FAILED
             session.commit()

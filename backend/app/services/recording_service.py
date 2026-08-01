@@ -22,9 +22,6 @@ async def create_recording(db: AsyncSession, payload: RecordingCreate) -> Record
     await db.refresh(recording)
 
     if recording.source == RecordingSource.YOUTUBE:
-        # Imported here (not at module top) to avoid a hard import-time
-        # dependency from app -> worker for every request; only paid for
-        # when actually creating a youtube-source recording.
         from worker.tasks.ingest import process_youtube_recording
 
         process_youtube_recording.delay(str(recording.id))
@@ -55,10 +52,6 @@ async def list_recordings_for_user(
 async def process_upload(
     db: AsyncSession, recording: Recording, upload_file: UploadFile
 ) -> Recording:
-    """
-    Orchestrates: save file to disk -> validate it's real decodable audio
-    -> update the recording row (storage_path, duration_seconds, status).
-    """
     if recording.status == RecordingStatus.READY:
         raise RecordingConflictError(str(recording.id))
 

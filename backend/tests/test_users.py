@@ -32,7 +32,6 @@ async def test_get_user(client):
     email = f"test-{uuid.uuid4().hex[:8]}@example.com"
     created = await client.post("/api/v1/users", json={"email": email})
     user_id = created.json()["id"]
-
     response = await client.get(f"/api/v1/users/{user_id}")
     assert response.status_code == 200
     assert response.json()["email"] == email

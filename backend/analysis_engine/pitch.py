@@ -9,13 +9,6 @@ from analysis_engine.features import HOP_LENGTH
 
 @dataclass
 class PitchContour:
-    """
-    Frame-by-frame pitch (F0, fundamental frequency) over the duration
-    of a single recording. frequencies_hz is NaN wherever the frame
-    was judged unvoiced (rests, breaths, noise) — pitch is only
-    meaningful where a note is actually sounding.
-    """
-
     times: np.ndarray
     frequencies_hz: np.ndarray
     voiced: np.ndarray
@@ -28,14 +21,6 @@ def extract_pitch_contour(
     fmin: float | None = None,
     fmax: float | None = None,
 ) -> PitchContour:
-    """
-    Extracts a pitch contour using pYIN (probabilistic YIN) — a
-    well-established autocorrelation-based pitch tracker with a
-    voiced/unvoiced decision built in, which matters for real
-    recordings that include rests and breaths, not just continuous
-    tone. Default fmin/fmax (C2-C7) cover essentially the full range
-    of most orchestral/band instruments and voice.
-    """
     fmin = fmin or librosa.note_to_hz("C2")
     fmax = fmax or librosa.note_to_hz("C7")
 
@@ -49,11 +34,6 @@ def extract_pitch_contour(
 
 @dataclass
 class PitchDeviationPoint:
-    """One comparison point: what the reference was doing, what the
-    student was doing at the corresponding (DTW-aligned) moment, and
-    the difference in cents. Positive = student sharp; negative =
-    student flat. (100 cents = one semitone.)"""
-
     reference_time: float
     student_time: float
     reference_hz: float
@@ -74,13 +54,6 @@ class PitchComparisonResult:
     def flagged_regions(
         self, threshold_cents: float = 25.0, max_gap_seconds: float = 0.3
     ) -> list[tuple[float, float]]:
-        """
-        Groups consecutive out-of-tune points into contiguous
-        (start_time, end_time) regions in reference-time — this is
-        what turns a mass of per-frame numbers into something like
-        "sharp from 0:42 to 0:47", which is what a feedback message
-        actually needs.
-        """
         regions: list[tuple[float, float]] = []
         current_start: float | None = None
         last_time: float | None = None
@@ -112,21 +85,6 @@ def compare_pitch(
     alignment: AlignmentResult,
     max_time_gap: float = 0.15,
 ) -> PitchComparisonResult:
-    """
-    For every voiced reference frame, finds where that moment falls in
-    the student's timeline (via the DTW alignment), then finds the
-    nearest voiced student frame to that target time and compares
-    pitch in cents.
-
-    Deliberately does NOT interpolate the student's pitch curve across
-    time — pitch is undefined during silence/unvoiced frames, so
-    interpolating across a gap would fabricate a note that was never
-    played. Instead we do a nearest-neighbor lookup and simply skip
-    the comparison (rather than guess) if the nearest voiced student
-    frame is further than max_time_gap away, which usually means the
-    student wasn't playing anything comparable at that moment (e.g. a
-    rest, or a passage they skipped).
-    """
     student_voiced_times = student.times[student.voiced]
     student_voiced_hz = student.frequencies_hz[student.voiced]
 

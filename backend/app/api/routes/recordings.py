@@ -11,13 +11,6 @@ router = APIRouter(prefix="/recordings", tags=["recordings"])
 
 @router.post("", response_model=RecordingRead, status_code=status.HTTP_201_CREATED)
 async def create_recording(payload: RecordingCreate, db: DBSession) -> RecordingRead:
-    """
-    Registers recording metadata. For source=upload, the row is created
-    with status=pending and waits for the /upload endpoint. For
-    source=youtube, creation automatically enqueues a background job
-    (Celery) that downloads, validates, and transitions the row through
-    processing -> ready/failed.
-    """
     return await recording_service.create_recording(db, payload)
 
 
@@ -43,10 +36,5 @@ async def upload_recording_audio(
     db: DBSession,
     file: UploadFile = File(...),
 ) -> RecordingRead:
-    """
-    Accepts a multipart audio file for a recording created with
-    source=upload. Validates file type, size, and actual decodability;
-    on success the recording transitions to status=ready.
-    """
     recording = await recording_service.get_recording(db, recording_id)
     return await recording_service.process_upload(db, recording, file)
