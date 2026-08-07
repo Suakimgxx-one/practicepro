@@ -27,6 +27,7 @@ from analysis_engine.dynamics import (
     compare_dynamics,
     extract_loudness_contour,
 )
+from analysis_engine.feedback import build_analysis_summary, generate_feedback
 
 __all__ = [
     "align", "AlignmentResult", "chroma_features", "load_audio",
@@ -34,4 +35,5 @@ __all__ = [
     "detect_onsets", "compare_rhythm", "RhythmComparisonResult", "RhythmDeviationPoint",
     "compute_tempo_ratio_curve", "estimate_average_bpm", "compare_tempo", "TempoComparisonResult", "TempoRatioPoint",
     "extract_loudness_contour", "compare_dynamics", "LoudnessContour", "DynamicsComparisonResult", "DynamicsDeviationPoint",
+    "build_analysis_summary", "generate_feedback",
 ]
