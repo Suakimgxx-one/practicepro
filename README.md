@@ -44,6 +44,6 @@ docker compose exec api pytest -v
 8. ✅ Tempo analysis — alignment-path tempo ratio + best-effort BPM
 9. ✅ Dynamics analysis — LUFS loudness comparison
 10. ✅ Feedback engine — LLM-generated coaching text, grounded in measured data
-11. Frontend — core flow
+11. ✅ Frontend — core flow (user session, YouTube + upload inputs, status polling)
 12. Frontend — visualization
 13. Integration + deployment
