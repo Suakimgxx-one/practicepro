@@ -1,7 +1,3 @@
-// Mirrors backend/app/models/recording.py and app/schemas/recording.py.
-// Kept as plain string literal unions (not enums) since that's what
-// FastAPI/Pydantic actually serializes these as over the wire.
-
 export type RecordingType = "reference" | "student";
 export type RecordingSource = "youtube" | "upload";
 export type RecordingStatus = "pending" | "processing" | "ready" | "failed";

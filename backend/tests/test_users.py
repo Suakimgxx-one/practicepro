@@ -1,5 +1,4 @@
 import uuid
-
 import pytest
 
 
@@ -8,9 +7,7 @@ async def test_create_user(client):
     email = f"test-{uuid.uuid4().hex[:8]}@example.com"
     response = await client.post("/api/v1/users", json={"email": email})
     assert response.status_code == 201
-    body = response.json()
-    assert body["email"] == email
-    assert "id" in body
+    assert response.json()["email"] == email
 
 
 @pytest.mark.asyncio
@@ -31,7 +28,6 @@ async def test_get_user_not_found(client):
 async def test_get_user(client):
     email = f"test-{uuid.uuid4().hex[:8]}@example.com"
     created = await client.post("/api/v1/users", json={"email": email})
-    user_id = created.json()["id"]
-    response = await client.get(f"/api/v1/users/{user_id}")
+    response = await client.get(f"/api/v1/users/{created.json()['id']}")
     assert response.status_code == 200
     assert response.json()["email"] == email

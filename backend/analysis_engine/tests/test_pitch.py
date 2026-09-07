@@ -1,13 +1,12 @@
 import numpy as np
 import pytest
-
 from analysis_engine.alignment import align
 from analysis_engine.pitch import compare_pitch, extract_pitch_contour
 
 SR = 22050
 
 
-def _tone(freq: float, duration: float, sr: int = SR) -> np.ndarray:
+def _tone(freq, duration, sr=SR):
     t = np.linspace(0, duration, int(sr * duration), endpoint=False)
     waveform = 0.3 * np.sin(2 * np.pi * freq * t)
     fade_samples = int(sr * 0.01)
@@ -19,7 +18,7 @@ def _tone(freq: float, duration: float, sr: int = SR) -> np.ndarray:
     return waveform
 
 
-def _cents_shift(freq: float, cents: float) -> float:
+def _cents_shift(freq, cents):
     return freq * (2 ** (cents / 1200))
 
 
@@ -28,15 +27,13 @@ def test_extract_pitch_contour_detects_correct_frequency():
     contour = extract_pitch_contour(waveform, SR)
     voiced_freqs = contour.frequencies_hz[contour.voiced]
     assert len(voiced_freqs) > 0
-    mean_freq = np.mean(voiced_freqs)
-    assert mean_freq == pytest.approx(440.0, abs=3.0)
+    assert np.mean(voiced_freqs) == pytest.approx(440.0, abs=3.0)
 
 
 def test_extract_pitch_contour_marks_silence_unvoiced():
     silence = np.zeros(SR)
     contour = extract_pitch_contour(silence, SR)
-    voiced_fraction = np.mean(contour.voiced)
-    assert voiced_fraction < 0.2
+    assert np.mean(contour.voiced) < 0.2
 
 
 def test_compare_pitch_identical_performance_shows_near_zero_deviation():
@@ -65,7 +62,6 @@ def test_compare_pitch_detects_consistent_sharp_offset():
 
 def test_flagged_regions_identifies_only_the_out_of_tune_section():
     in_tune_freq = 440.0
-    sharp_freq = _cents_shift(440.0, 60)
     reference_waveform = np.concatenate([_tone(in_tune_freq, 1.0), _tone(392.0, 1.0)])
     student_waveform = np.concatenate([_tone(in_tune_freq, 1.0), _tone(_cents_shift(392.0, 60), 1.0)])
     ref_contour = extract_pitch_contour(reference_waveform, SR)
@@ -74,5 +70,4 @@ def test_flagged_regions_identifies_only_the_out_of_tune_section():
     result = compare_pitch(ref_contour, student_contour, alignment)
     regions = result.flagged_regions(threshold_cents=25.0)
     assert len(regions) >= 1
-    first_region_start = regions[0][0]
-    assert first_region_start > 0.5
+    assert regions[0][0] > 0.5

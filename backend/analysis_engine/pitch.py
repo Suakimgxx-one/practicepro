@@ -15,20 +15,13 @@ class PitchContour:
 
 
 def extract_pitch_contour(
-    waveform: np.ndarray,
-    sr: int,
-    hop_length: int = HOP_LENGTH,
-    fmin: float | None = None,
-    fmax: float | None = None,
+    waveform: np.ndarray, sr: int, hop_length: int = HOP_LENGTH,
+    fmin: float | None = None, fmax: float | None = None,
 ) -> PitchContour:
     fmin = fmin or librosa.note_to_hz("C2")
     fmax = fmax or librosa.note_to_hz("C7")
-
-    f0, voiced_flag, _voiced_prob = librosa.pyin(
-        y=waveform, fmin=fmin, fmax=fmax, sr=sr, hop_length=hop_length
-    )
+    f0, voiced_flag, _voiced_prob = librosa.pyin(y=waveform, fmin=fmin, fmax=fmax, sr=sr, hop_length=hop_length)
     times = librosa.times_like(f0, sr=sr, hop_length=hop_length)
-
     return PitchContour(times=times, frequencies_hz=f0, voiced=voiced_flag)
 
 
@@ -51,13 +44,10 @@ class PitchComparisonResult:
             return 0.0
         return float(np.mean([abs(p.cents_deviation) for p in self.points]))
 
-    def flagged_regions(
-        self, threshold_cents: float = 25.0, max_gap_seconds: float = 0.3
-    ) -> list[tuple[float, float]]:
+    def flagged_regions(self, threshold_cents: float = 25.0, max_gap_seconds: float = 0.3) -> list[tuple[float, float]]:
         regions: list[tuple[float, float]] = []
         current_start: float | None = None
         last_time: float | None = None
-
         for point in self.points:
             flagged = abs(point.cents_deviation) > threshold_cents
             if flagged:
@@ -72,55 +62,32 @@ class PitchComparisonResult:
                     regions.append((current_start, last_time))
                 current_start = None
                 last_time = None
-
         if current_start is not None and last_time is not None:
             regions.append((current_start, last_time))
-
         return regions
 
 
-def compare_pitch(
-    reference: PitchContour,
-    student: PitchContour,
-    alignment: AlignmentResult,
-    max_time_gap: float = 0.15,
-) -> PitchComparisonResult:
+def compare_pitch(reference: PitchContour, student: PitchContour, alignment: AlignmentResult, max_time_gap: float = 0.15) -> PitchComparisonResult:
     student_voiced_times = student.times[student.voiced]
     student_voiced_hz = student.frequencies_hz[student.voiced]
-
     points: list[PitchDeviationPoint] = []
-
     if len(student_voiced_times) == 0:
         return PitchComparisonResult(points=points)
-
     for t_ref, f_ref, is_voiced in zip(reference.times, reference.frequencies_hz, reference.voiced):
         if not is_voiced:
             continue
-
         target_student_time = alignment.reference_to_student(float(t_ref))
-
         idx = int(np.searchsorted(student_voiced_times, target_student_time))
         candidate_indices = [i for i in (idx - 1, idx) if 0 <= i < len(student_voiced_times)]
         if not candidate_indices:
             continue
-
-        best_idx = min(
-            candidate_indices, key=lambda i: abs(student_voiced_times[i] - target_student_time)
-        )
+        best_idx = min(candidate_indices, key=lambda i: abs(student_voiced_times[i] - target_student_time))
         if abs(student_voiced_times[best_idx] - target_student_time) > max_time_gap:
             continue
-
         f_student = student_voiced_hz[best_idx]
         cents = 1200.0 * np.log2(f_student / f_ref)
-
-        points.append(
-            PitchDeviationPoint(
-                reference_time=float(t_ref),
-                student_time=float(student_voiced_times[best_idx]),
-                reference_hz=float(f_ref),
-                student_hz=float(f_student),
-                cents_deviation=float(cents),
-            )
-        )
-
+        points.append(PitchDeviationPoint(
+            reference_time=float(t_ref), student_time=float(student_voiced_times[best_idx]),
+            reference_hz=float(f_ref), student_hz=float(f_student), cents_deviation=float(cents),
+        ))
     return PitchComparisonResult(points=points)

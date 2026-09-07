@@ -13,70 +13,34 @@ def build_analysis_summary(
     tempo: TempoComparisonResult | None = None,
     dynamics: DynamicsComparisonResult | None = None,
 ) -> dict[str, Any]:
-    """
-    Condenses the four comparison results into a compact,
-    JSON-serializable summary — flagged regions and headline stats
-    only, not every raw per-frame point. This is exactly the context
-    the feedback-generation LLM call receives; keeping it to aggregate
-    signals rather than thousands of raw points keeps that call cheap
-    and focused on musically meaningful patterns instead of noise.
-    """
     summary: dict[str, Any] = {}
-
     if pitch is not None:
         summary["pitch"] = {
             "mean_absolute_cents_deviation": round(pitch.mean_absolute_cents_deviation, 1),
-            "flagged_regions": [
-                {"start": round(s, 2), "end": round(e, 2), "issue": "out_of_tune"}
-                for s, e in pitch.flagged_regions()
-            ],
+            "flagged_regions": [{"start": round(s, 2), "end": round(e, 2), "issue": "out_of_tune"} for s, e in pitch.flagged_regions()],
         }
-
     if rhythm is not None:
         summary["rhythm"] = {
             "mean_absolute_timing_offset_seconds": round(rhythm.mean_absolute_timing_offset, 3),
             "unmatched_reference_onsets": rhythm.unmatched_reference_onsets,
             "unmatched_student_onsets": rhythm.unmatched_student_onsets,
-            "flagged_regions": [
-                {"start": round(s, 2), "end": round(e, 2), "issue": "timing_off"}
-                for s, e in rhythm.flagged_regions()
-            ],
+            "flagged_regions": [{"start": round(s, 2), "end": round(e, 2), "issue": "timing_off"} for s, e in rhythm.flagged_regions()],
         }
-
     if tempo is not None:
         summary["tempo"] = {
             "mean_tempo_ratio": round(tempo.mean_tempo_ratio, 3),
-            "reference_average_bpm": (
-                round(tempo.reference_average_bpm, 1) if tempo.reference_average_bpm else None
-            ),
-            "student_average_bpm": (
-                round(tempo.student_average_bpm, 1) if tempo.student_average_bpm else None
-            ),
-            "flagged_regions": [
-                {"start": round(s, 2), "end": round(e, 2), "issue": label}
-                for s, e, label in tempo.flagged_regions()
-            ],
+            "reference_average_bpm": round(tempo.reference_average_bpm, 1) if tempo.reference_average_bpm else None,
+            "student_average_bpm": round(tempo.student_average_bpm, 1) if tempo.student_average_bpm else None,
+            "flagged_regions": [{"start": round(s, 2), "end": round(e, 2), "issue": label} for s, e, label in tempo.flagged_regions()],
         }
-
     if dynamics is not None:
         summary["dynamics"] = {
-            "mean_absolute_loudness_difference_db": round(
-                dynamics.mean_absolute_loudness_difference, 1
-            ),
-            "flagged_regions": [
-                {"start": round(s, 2), "end": round(e, 2), "issue": label}
-                for s, e, label in dynamics.flagged_regions()
-            ],
+            "mean_absolute_loudness_difference_db": round(dynamics.mean_absolute_loudness_difference, 1),
+            "flagged_regions": [{"start": round(s, 2), "end": round(e, 2), "issue": label} for s, e, label in dynamics.flagged_regions()],
         }
-
     return summary
 
 
-# Tone/detail level are deliberate product choices, not defaults I picked
-# arbitrarily: direct and technical (a serious practice tool, not a
-# cheerleader), and one note per flagged issue rather than a compressed
-# headline summary — a musician preparing for an audition wants the full
-# list of specific spots to fix, not a vague overview.
 FEEDBACK_SYSTEM_PROMPT = """You are a precise, technically-minded music practice coach. You will be given structured measurement data comparing a student's instrumental performance against a professional reference recording of the same piece. The data includes flagged time regions and summary statistics for pitch, rhythm, tempo, and dynamics.
 
 Generate specific, actionable feedback messages based ONLY on the data provided. Every message must reference a specific measurement or time region from the data — never invent details, timestamps, or issues that aren't present in the input.
@@ -93,26 +57,7 @@ Respond with ONLY a JSON array, no other text, no markdown code fences. Each ele
 Example message style: "Pitch drifts sharp by roughly 30 cents from 0:42 to 0:47 — check the embouchure on the sustained high passage there." Not: "Try to work on your intonation in this section!\""""
 
 
-def generate_feedback(
-    summary: dict[str, Any],
-    client: Any,
-    model: str = "claude-sonnet-4-6",
-) -> list[dict[str, Any]]:
-    """
-    Turns a structured analysis summary into feedback messages via an
-    LLM call. The model's job is deliberately narrow: grounded
-    data-to-text generation, not open-ended musical judgment. It never
-    sees raw audio and is explicitly instructed not to invent anything
-    outside the given summary — this keeps output testable (we can
-    assert on structure and grounding) and prevents hallucinated
-    feedback about things that were never actually measured.
-
-    `client` is injected rather than constructed here so this stays
-    testable with a fake/mock client — no real API key or network call
-    needed to test prompt construction and response parsing. The real
-    client (built from configured settings) is wired in by
-    app/services/feedback_service.py.
-    """
+def generate_feedback(summary: dict[str, Any], client: Any, model: str = "claude-sonnet-4-6") -> list[dict[str, Any]]:
     if not summary:
         return []
 
@@ -123,9 +68,7 @@ def generate_feedback(
         messages=[{"role": "user", "content": json.dumps(summary)}],
     )
 
-    raw_text = "".join(
-        block.text for block in response.content if getattr(block, "type", None) == "text"
-    )
+    raw_text = "".join(block.text for block in response.content if getattr(block, "type", None) == "text")
 
     try:
         parsed = json.loads(raw_text)
@@ -142,12 +85,9 @@ def generate_feedback(
             continue
         if item["category"] not in valid_categories:
             continue
-        feedback_items.append(
-            {
-                "category": item["category"],
-                "text": str(item["text"]),
-                "timestamp_reference": item.get("timestamp_reference"),
-            }
-        )
-
+        feedback_items.append({
+            "category": item["category"],
+            "text": str(item["text"]),
+            "timestamp_reference": item.get("timestamp_reference"),
+        })
     return feedback_items

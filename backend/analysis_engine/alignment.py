@@ -31,7 +31,6 @@ def align(
     student_chroma = chroma_features(student_waveform, student_sr, hop_length)
 
     cost_matrix, warping_path = librosa.sequence.dtw(X=ref_chroma, Y=student_chroma, metric="cosine")
-
     warping_path = warping_path[::-1]
 
     reference_frames = warping_path[:, 0]
@@ -42,8 +41,4 @@ def align(
 
     total_cost = float(cost_matrix[-1, -1])
 
-    return AlignmentResult(
-        reference_times=reference_times,
-        student_times=student_times,
-        cost=total_cost,
-    )
+    return AlignmentResult(reference_times=reference_times, student_times=student_times, cost=total_cost)

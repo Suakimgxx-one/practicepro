@@ -24,14 +24,9 @@ export function EmailGate({ onSubmit }: EmailGateProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-xl p-6"
-      >
+      <form onSubmit={handleSubmit} className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-xl p-6">
         <h1 className="text-xl font-semibold mb-1">PracticePro</h1>
-        <p className="text-slate-400 text-sm mb-5">
-          Enter your email to start a practice session.
-        </p>
+        <p className="text-slate-400 text-sm mb-5">Enter your email to start a practice session.</p>
         <input
           type="email"
           required

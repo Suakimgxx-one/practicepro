@@ -16,9 +16,7 @@ const STATUS_LABELS: Record<RecordingStatus, string> = {
 
 export function StatusBadge({ status }: { status: RecordingStatus }) {
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[status]}`}
-    >
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[status]}`}>
       {STATUS_LABELS[status]}
     </span>
   );

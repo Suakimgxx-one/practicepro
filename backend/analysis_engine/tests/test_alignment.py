@@ -1,13 +1,12 @@
 import numpy as np
 import pytest
-
 from analysis_engine.alignment import align
 
 SR = 22050
 NOTE_FREQS = [261.63, 329.63, 392.00, 523.25]
 
 
-def _tone(freq: float, duration: float, sr: int = SR) -> np.ndarray:
+def _tone(freq, duration, sr=SR):
     t = np.linspace(0, duration, int(sr * duration), endpoint=False)
     waveform = 0.3 * np.sin(2 * np.pi * freq * t)
     fade_samples = int(sr * 0.01)
@@ -19,10 +18,8 @@ def _tone(freq: float, duration: float, sr: int = SR) -> np.ndarray:
     return waveform
 
 
-def _make_sequence(note_durations: list[float], sr: int = SR) -> np.ndarray:
-    return np.concatenate(
-        [_tone(freq, dur, sr) for freq, dur in zip(NOTE_FREQS, note_durations)]
-    )
+def _make_sequence(note_durations, sr=SR):
+    return np.concatenate([_tone(freq, dur, sr) for freq, dur in zip(NOTE_FREQS, note_durations)])
 
 
 def test_align_identical_signals_maps_time_to_itself():
@@ -53,9 +50,7 @@ def test_align_returns_chronologically_ordered_times():
 def test_align_cost_is_lower_for_more_similar_performances():
     reference = _make_sequence([0.5, 0.5, 0.5, 0.5])
     similar_student = _make_sequence([0.4, 0.6, 0.5, 0.5])
-    different_student = np.concatenate(
-        [_tone(freq, 0.5, SR) for freq in list(reversed(NOTE_FREQS))]
-    )
+    different_student = np.concatenate([_tone(freq, 0.5, SR) for freq in list(reversed(NOTE_FREQS))])
     similar_result = align(reference, SR, similar_student, SR)
     different_result = align(reference, SR, different_student, SR)
     assert similar_result.cost < different_result.cost

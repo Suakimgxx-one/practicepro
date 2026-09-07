@@ -38,13 +38,11 @@ export function PracticeSessionPage() {
 
         {bothReady && (
           <div className="mt-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5">
-            <p className="text-emerald-400 text-sm font-medium">
-              Both recordings are ready.
-            </p>
+            <p className="text-emerald-400 text-sm font-medium">Both recordings are ready.</p>
             <p className="text-slate-400 text-sm mt-1">
-              Alignment and comparison analysis wiring lands in Milestone 13 —
-              for now, both recording IDs are ready to hand off to the
-              analysis engine.
+              The backend can now run the full comparison (alignment, pitch,
+              rhythm, tempo, dynamics, feedback) via POST /analysis-sessions —
+              chart visualization of that output lands next.
             </p>
           </div>
         )}

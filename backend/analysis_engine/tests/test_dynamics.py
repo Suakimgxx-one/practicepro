@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from analysis_engine.alignment import align
 from analysis_engine.dynamics import compare_dynamics, extract_loudness_contour
 
@@ -8,7 +7,7 @@ SR = 22050
 NOTE_FREQS = [261.63, 329.63, 392.00, 523.25]
 
 
-def _tone(freq: float, duration: float, amplitude: float = 0.3, sr: int = SR) -> np.ndarray:
+def _tone(freq, duration, amplitude=0.3, sr=SR):
     t = np.linspace(0, duration, int(sr * duration), endpoint=False)
     waveform = amplitude * np.sin(2 * np.pi * freq * t)
     fade_samples = int(sr * 0.01)
@@ -20,16 +19,9 @@ def _tone(freq: float, duration: float, amplitude: float = 0.3, sr: int = SR) ->
     return waveform
 
 
-def _make_sequence(
-    note_durations: list[float],
-    amplitudes: list[float] | None = None,
-    freqs: list[float] = NOTE_FREQS,
-    sr: int = SR,
-) -> np.ndarray:
+def _make_sequence(note_durations, amplitudes=None, freqs=NOTE_FREQS, sr=SR):
     amplitudes = amplitudes or [0.3] * len(note_durations)
-    return np.concatenate(
-        [_tone(f, d, a, sr) for f, d, a in zip(freqs, note_durations, amplitudes)]
-    )
+    return np.concatenate([_tone(f, d, a, sr) for f, d, a in zip(freqs, note_durations, amplitudes)])
 
 
 def test_compare_dynamics_identical_signals_near_zero_difference():
@@ -64,5 +56,4 @@ def test_compare_dynamics_flags_a_louder_passage():
     regions = result.flagged_regions(threshold_db=4.0)
     louder_regions = [r for r in regions if r[2] == "louder_than_reference"]
     assert len(louder_regions) >= 1
-    start, end, _label = louder_regions[0]
-    assert start >= 0.5
+    assert louder_regions[0][0] >= 0.5

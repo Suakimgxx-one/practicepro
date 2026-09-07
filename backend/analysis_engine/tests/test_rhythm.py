@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from analysis_engine.alignment import align
 from analysis_engine.rhythm import compare_rhythm, detect_onsets
 
@@ -8,7 +7,7 @@ SR = 22050
 NOTE_FREQS = [261.63, 329.63, 392.00, 523.25]
 
 
-def _tone(freq: float, duration: float, sr: int = SR) -> np.ndarray:
+def _tone(freq, duration, sr=SR):
     t = np.linspace(0, duration, int(sr * duration), endpoint=False)
     waveform = 0.3 * np.sin(2 * np.pi * freq * t)
     fade_samples = int(sr * 0.005)
@@ -20,7 +19,7 @@ def _tone(freq: float, duration: float, sr: int = SR) -> np.ndarray:
     return waveform
 
 
-def _make_sequence(note_durations: list[float], freqs: list[float] = NOTE_FREQS, sr: int = SR) -> np.ndarray:
+def _make_sequence(note_durations, freqs=NOTE_FREQS, sr=SR):
     return np.concatenate([_tone(f, d, sr) for f, d in zip(freqs, note_durations)])
 
 
