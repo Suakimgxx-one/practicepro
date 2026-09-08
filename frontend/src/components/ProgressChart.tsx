@@ -11,34 +11,27 @@ export function ProgressChart({ progress }: { progress: PieceProgressPoint[] }) 
     }));
 
   if (chartData.length === 0) {
-    return (
-      <p className="text-sm text-ink-faint py-2">
-        Progress appears here once you've compared at least one practice attempt.
-      </p>
-    );
+    return <p className="text-sm text-ink-500 py-2">Progress appears here once you've compared at least one practice attempt.</p>;
   }
-
   if (chartData.length === 1) {
     return (
-      <p className="text-sm text-ink-soft py-2">
-        One attempt so far — {chartData[0].cents.toFixed(1)} cents average deviation. Log another
-        attempt to start seeing a trend.
+      <p className="text-sm text-ink-300 py-2">
+        One attempt so far — {chartData[0].cents.toFixed(1)} cents average deviation. Log another attempt to start seeing a trend.
       </p>
     );
   }
-
   return (
     <div>
-      <p className="text-xs text-ink-faint mb-2">Pitch accuracy across attempts (lower is closer to the reference)</p>
+      <p className="text-xs text-ink-500 mb-2">Pitch accuracy across attempts (lower is closer to the reference)</p>
       <ResponsiveContainer width="100%" height={140}>
         <LineChart data={chartData} margin={{ top: 5, right: 4, left: -20, bottom: 0 }}>
-          <XAxis dataKey="date" stroke="#A69B8A" fontSize={11} tickLine={false} axisLine={false} />
-          <YAxis stroke="#A69B8A" fontSize={11} tickLine={false} axisLine={false} width={36} />
+          <XAxis dataKey="date" stroke="#5A5D6E" fontSize={11} tickLine={false} axisLine={false} />
+          <YAxis stroke="#5A5D6E" fontSize={11} tickLine={false} axisLine={false} width={36} />
           <Tooltip
-            contentStyle={{ background: "#FAF7F0", border: "1px solid #DDD5C7", borderRadius: 4, fontSize: 12, fontFamily: "IBM Plex Sans" }}
+            contentStyle={{ background: "#191B24", border: "1px solid #2E313F", borderRadius: 8, fontSize: 12, fontFamily: "Plus Jakarta Sans" }}
             formatter={(value: number) => [`${value.toFixed(1)} cents`, "avg deviation"]}
           />
-          <Line type="monotone" dataKey="cents" stroke="#A67C3D" strokeWidth={1.75} dot={{ r: 3, fill: "#A67C3D" }} isAnimationActive={false} />
+          <Line type="monotone" dataKey="cents" stroke="#9C8CFF" strokeWidth={1.75} dot={{ r: 3, fill: "#9C8CFF" }} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>

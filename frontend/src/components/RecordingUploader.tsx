@@ -38,12 +38,7 @@ export function RecordingUploader({
     setUploadError(null);
     setUploading(true);
     try {
-      const created = await createRecording({
-        user_id: userId,
-        type: "student",
-        source: "upload",
-        piece_id: pieceId,
-      });
+      const created = await createRecording({ user_id: userId, type: "student", source: "upload", piece_id: pieceId });
       setRecordingId(created.id);
       await uploadRecordingAudio(created.id, file);
     } catch (err) {
@@ -56,15 +51,13 @@ export function RecordingUploader({
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-sm font-medium text-ink-soft">{label}</h2>
+        <h2 className="text-sm font-medium text-ink-300">{label}</h2>
         {recording && <StatusBadge status={recording.status} />}
       </div>
       {!recordingId ? (
-        <label className="flex items-center gap-2 text-sm text-ink-soft hover:text-brass-dark cursor-pointer transition-colors">
-          <span className="border-b border-dashed border-line pb-0.5">
-            {uploading ? "Uploading…" : "Choose an audio file"}
-          </span>
-          <span className="text-ink-faint text-xs">wav, mp3, m4a, flac, ogg</span>
+        <label className="flex items-center gap-3 border border-dashed border-border-subtle hover:border-accent-500 rounded-lg px-4 py-3 cursor-pointer transition-colors">
+          <span className="text-sm text-ink-300">{uploading ? "Uploading…" : "Choose an audio file"}</span>
+          <span className="text-ink-500 text-xs">wav, mp3, m4a, flac, ogg</span>
           <input
             type="file"
             accept=".wav,.mp3,.m4a,.flac,.ogg"
@@ -74,12 +67,12 @@ export function RecordingUploader({
           />
         </label>
       ) : (
-        <p className="text-sm text-ink-soft truncate">{fileName}</p>
+        <p className="text-sm text-ink-500 truncate">{fileName}</p>
       )}
-      {uploadError && <p className="text-brick text-sm mt-2">{uploadError}</p>}
-      {pollError && <p className="text-brick text-sm mt-2">{pollError}</p>}
+      {uploadError && <p className="text-danger text-sm mt-2">{uploadError}</p>}
+      {pollError && <p className="text-danger text-sm mt-2">{pollError}</p>}
       {recording?.status === "failed" && (
-        <p className="text-brick text-sm mt-2">This file couldn't be processed — it may not be valid audio.</p>
+        <p className="text-danger text-sm mt-2">This file couldn't be processed — it may not be valid audio.</p>
       )}
     </div>
   );

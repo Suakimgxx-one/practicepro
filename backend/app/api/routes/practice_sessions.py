@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import DBSession
 from app.schemas.practice_session import (
@@ -38,5 +38,19 @@ async def finish_practice_session(
 
 
 @router.get("", response_model=list[PracticeSessionRead])
-async def list_practice_sessions(db: DBSession, piece_id: uuid.UUID) -> list[PracticeSessionRead]:
-    return await practice_session_service.list_sessions_for_piece(db, piece_id)
+async def list_practice_sessions(
+    db: DBSession,
+    piece_id: uuid.UUID | None = None,
+    user_id: uuid.UUID | None = None,
+) -> list[PracticeSessionRead]:
+    """
+    Filter by piece_id (a single piece's history) or user_id (every
+    session across all of a user's pieces — used by the dashboard to
+    compute today/this-week practice time and streaks from real data).
+    At least one must be provided.
+    """
+    if piece_id is not None:
+        return await practice_session_service.list_sessions_for_piece(db, piece_id)
+    if user_id is not None:
+        return await practice_session_service.list_sessions_for_user(db, user_id)
+    raise HTTPException(status_code=422, detail="Either piece_id or user_id is required")

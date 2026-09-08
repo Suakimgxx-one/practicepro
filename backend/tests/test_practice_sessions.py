@@ -94,3 +94,22 @@ async def test_list_practice_sessions_for_piece(client):
     response = await client.get("/api/v1/practice-sessions", params={"piece_id": piece_id})
     assert response.status_code == 200
     assert len(response.json()) == 1
+
+
+@pytest.mark.asyncio
+async def test_list_practice_sessions_for_user_across_pieces(client):
+    user_id = await _make_user(client)
+    piece_1 = await _make_piece(client, user_id)
+    piece_2 = await _make_piece(client, user_id)
+    await client.post("/api/v1/practice-sessions", json={"user_id": user_id, "piece_id": piece_1})
+    await client.post("/api/v1/practice-sessions", json={"user_id": user_id, "piece_id": piece_2})
+
+    response = await client.get("/api/v1/practice-sessions", params={"user_id": user_id})
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+@pytest.mark.asyncio
+async def test_list_practice_sessions_requires_a_filter(client):
+    response = await client.get("/api/v1/practice-sessions")
+    assert response.status_code == 422

@@ -3,11 +3,24 @@
 @tailwind utilities;
 
 body {
-  background-color: #FAF7F0;
-  color: #2B2621;
+  background-color: #0A0B10;
+  color: #F3F4F7;
 }
 
 ::selection {
-  background-color: #A67C3D;
-  color: #FAF7F0;
+  background-color: #7C6CF6;
+  color: #F3F4F7;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2E313F transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

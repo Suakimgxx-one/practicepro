@@ -1,9 +1,13 @@
 import type { Recording } from "@/types/recording";
+import type { PracticeSession } from "@/types/practiceSession";
 
 export interface Piece {
   id: string;
   user_id: string;
   title: string;
+  composer: string | null;
+  instrument: string | null;
+  folder_id: string | null;
   reference_recording_id: string | null;
   created_at: string;
 }
@@ -22,4 +26,6 @@ export interface PieceDetail extends Piece {
   reference_recording: Recording | null;
   attempts: Recording[];
   progress: PieceProgressPoint[];
+  practice_sessions: PracticeSession[];
+  total_practice_seconds: number;
 }

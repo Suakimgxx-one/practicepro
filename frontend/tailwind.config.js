@@ -4,22 +4,38 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        serif: ["Source Serif 4", "Georgia", "serif"],
-        sans: ["IBM Plex Sans", "system-ui", "sans-serif"],
+        sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
       },
       colors: {
-        paper: "#FAF7F0",
-        "paper-dim": "#F1ECE1",
-        ink: "#2B2621",
-        "ink-soft": "#6B6154",
-        "ink-faint": "#A69B8A",
-        line: "#DDD5C7",
-        brass: "#A67C3D",
-        "brass-dark": "#8A6530",
-        brick: "#A6503D",
-        "brick-soft": "#C97D6D",
-        sage: "#6E8F6B",
-        "sage-soft": "#9BB498",
+        surface: {
+          950: "#0A0B10",
+          900: "#111219",
+          800: "#191B24",
+          700: "#242631",
+        },
+        border: {
+          subtle: "#242631",
+          DEFAULT: "#2E313F",
+        },
+        ink: {
+          100: "#F3F4F7",
+          300: "#C4C6D3",
+          500: "#8B8FA3",
+          700: "#5A5D6E",
+        },
+        accent: {
+          400: "#9C8CFF",
+          500: "#7C6CF6",
+          600: "#6353E0",
+          glow: "#7C6CF64D",
+        },
+        success: "#34D399",
+        warning: "#FBBF24",
+        danger: "#F87171",
+      },
+      boxShadow: {
+        glow: "0 0 40px -8px rgba(124, 108, 246, 0.35)",
+        panel: "0 8px 30px -12px rgba(0, 0, 0, 0.6)",
       },
     },
   },

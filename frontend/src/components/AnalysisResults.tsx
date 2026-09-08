@@ -23,38 +23,32 @@ export function AnalysisResults({ session }: { session: AnalysisSession }) {
   const dynamics = getResultData<DynamicsResultData>(session, "dynamics");
 
   return (
-    <div className="divide-y divide-line">
+    <div className="divide-y divide-border-subtle">
       {pitch && <div className="py-6 first:pt-0"><PitchChart data={pitch} /></div>}
       {tempo && <div className="py-6"><TempoChart data={tempo} /></div>}
-
       {rhythm && (
         <div className="py-6">
           <div className="flex items-baseline justify-between">
-            <h3 className="text-sm font-medium text-ink-soft">Rhythm</h3>
-            <span className="text-xs text-ink-faint">
+            <h3 className="text-sm font-medium text-ink-300">Rhythm</h3>
+            <span className="text-xs text-ink-500">
               {(rhythm.mean_absolute_timing_offset_seconds * 1000).toFixed(0)}ms average offset
-              {rhythm.unmatched_reference_onsets > 0 &&
-                ` · ${rhythm.unmatched_reference_onsets} note${rhythm.unmatched_reference_onsets === 1 ? "" : "s"} possibly missed`}
+              {rhythm.unmatched_reference_onsets > 0 && ` · ${rhythm.unmatched_reference_onsets} note${rhythm.unmatched_reference_onsets === 1 ? "" : "s"} possibly missed`}
             </span>
           </div>
           <RegionsList regions={rhythm.flagged_regions} emptyMessage="No significant timing issues detected." />
         </div>
       )}
-
       {dynamics && (
         <div className="py-6">
           <div className="flex items-baseline justify-between">
-            <h3 className="text-sm font-medium text-ink-soft">Dynamics</h3>
-            <span className="text-xs text-ink-faint">
-              {dynamics.mean_absolute_loudness_difference_db.toFixed(1)} dB average difference
-            </span>
+            <h3 className="text-sm font-medium text-ink-300">Dynamics</h3>
+            <span className="text-xs text-ink-500">{dynamics.mean_absolute_loudness_difference_db.toFixed(1)} dB average difference</span>
           </div>
           <RegionsList regions={dynamics.flagged_regions} emptyMessage="No significant dynamics issues detected." />
         </div>
       )}
-
       <div className="py-6 last:pb-0">
-        <h3 className="text-sm font-medium text-ink-soft mb-3">Coaching notes</h3>
+        <h3 className="text-sm font-medium text-ink-300 mb-3">Coaching notes</h3>
         <FeedbackList feedback={session.feedback} />
       </div>
     </div>

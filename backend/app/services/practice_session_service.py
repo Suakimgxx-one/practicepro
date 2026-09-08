@@ -55,3 +55,12 @@ async def list_sessions_for_piece(db: AsyncSession, piece_id: uuid.UUID) -> list
         .order_by(PracticeSession.started_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def list_sessions_for_user(db: AsyncSession, user_id: uuid.UUID) -> list[PracticeSession]:
+    result = await db.execute(
+        select(PracticeSession)
+        .where(PracticeSession.user_id == user_id)
+        .order_by(PracticeSession.started_at.desc())
+    )
+    return list(result.scalars().all())

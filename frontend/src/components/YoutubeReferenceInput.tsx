@@ -48,34 +48,34 @@ export function YoutubeReferenceInput({ userId, pieceId, onReady }: YoutubeRefer
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-sm font-medium text-ink-soft">Reference performance</h2>
+        <h2 className="text-sm font-medium text-ink-300">Reference performance</h2>
         {recording && <StatusBadge status={recording.status} />}
       </div>
       {!recordingId ? (
-        <form onSubmit={handleSubmit} className="flex gap-3">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="url"
             required
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Paste a YouTube link"
-            className="flex-1 bg-transparent border-b border-line pb-2 text-sm outline-none focus:border-brass transition-colors"
+            className="flex-1 bg-surface-900 border border-border-subtle focus:border-accent-500 rounded-lg px-3.5 py-2.5 text-sm outline-none transition-colors"
           />
           <button
             type="submit"
             disabled={submitting}
-            className="text-sm font-medium text-ink hover:text-brass-dark disabled:opacity-50 transition-colors whitespace-nowrap"
+            className="bg-surface-800 hover:bg-surface-700 disabled:opacity-50 text-sm font-medium px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap"
           >
             {submitting ? "Submitting" : "Add"}
           </button>
         </form>
       ) : (
-        <p className="text-sm text-ink-soft truncate">{url}</p>
+        <p className="text-sm text-ink-500 truncate">{url}</p>
       )}
-      {submitError && <p className="text-brick text-sm mt-2">{submitError}</p>}
-      {pollError && <p className="text-brick text-sm mt-2">{pollError}</p>}
+      {submitError && <p className="text-danger text-sm mt-2">{submitError}</p>}
+      {pollError && <p className="text-danger text-sm mt-2">{pollError}</p>}
       {recording?.status === "failed" && (
-        <p className="text-brick text-sm mt-2">
+        <p className="text-danger text-sm mt-2">
           Couldn't process this video — it may be unavailable, or the link might be invalid.
         </p>
       )}
