@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-
 def _make_wav_bytes(duration_seconds=0.5, sample_rate=16000):
     t = np.linspace(0, duration_seconds, int(sample_rate * duration_seconds), endpoint=False)
     waveform = 0.1 * np.sin(2 * np.pi * 440 * t)
@@ -13,14 +12,12 @@ def _make_wav_bytes(duration_seconds=0.5, sample_rate=16000):
     buffer.seek(0)
     return buffer.read()
 
-
 async def _make_user_and_upload_recording(client):
     email = f"test-{uuid.uuid4().hex[:8]}@example.com"
     user_resp = await client.post("/api/v1/users", json={"email": email})
     user_id = user_resp.json()["id"]
     recording_resp = await client.post("/api/v1/recordings", json={"user_id": user_id, "type": "student", "source": "upload"})
     return user_id, recording_resp.json()["id"]
-
 
 @pytest.mark.asyncio
 async def test_upload_valid_audio(client):
@@ -31,13 +28,11 @@ async def test_upload_valid_audio(client):
     assert body["status"] == "ready"
     assert body["duration_seconds"] == pytest.approx(0.5, abs=0.05)
 
-
 @pytest.mark.asyncio
 async def test_upload_rejects_bad_extension(client):
     _, recording_id = await _make_user_and_upload_recording(client)
     response = await client.post(f"/api/v1/recordings/{recording_id}/upload", files={"file": ("test.txt", b"not audio", "text/plain")})
     assert response.status_code == 415
-
 
 @pytest.mark.asyncio
 async def test_upload_rejects_corrupt_audio(client):
@@ -47,7 +42,6 @@ async def test_upload_rejects_corrupt_audio(client):
     check = await client.get(f"/api/v1/recordings/{recording_id}")
     assert check.json()["status"] == "failed"
 
-
 @pytest.mark.asyncio
 async def test_upload_rejects_when_already_ready(client):
     _, recording_id = await _make_user_and_upload_recording(client)
@@ -56,7 +50,6 @@ async def test_upload_rejects_when_already_ready(client):
     assert first.status_code == 200
     second = await client.post(f"/api/v1/recordings/{recording_id}/upload", files={"file": ("test.wav", wav_bytes, "audio/wav")})
     assert second.status_code == 409
-
 
 @pytest.mark.asyncio
 async def test_upload_to_nonexistent_recording(client):

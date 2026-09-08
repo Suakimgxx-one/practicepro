@@ -23,25 +23,27 @@ export function EmailGate({ onSubmit }: EmailGateProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-xl p-6">
-        <h1 className="text-xl font-semibold mb-1">PracticePro</h1>
-        <p className="text-slate-400 text-sm mb-5">Enter your email to start a practice session.</p>
+    <div className="min-h-screen bg-paper text-ink flex items-center justify-center px-6">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm">
+        <h1 className="font-serif text-3xl mb-2">PracticePro</h1>
+        <p className="text-ink-soft text-sm mb-6 leading-relaxed">
+          A practice journal for the pieces you're working on. Enter your email to begin.
+        </p>
         <input
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm mb-3 outline-none focus:border-slate-500"
+          className="w-full bg-transparent border-b border-line pb-2 text-sm outline-none focus:border-brass transition-colors mb-4"
         />
-        {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+        {error && <p className="text-brick text-sm mb-4">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed py-2 text-sm font-medium transition-colors"
+          className="text-sm font-medium text-paper bg-ink hover:bg-brass-dark disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 rounded transition-colors"
         >
-          {submitting ? "Starting…" : "Continue"}
+          {submitting ? "Starting" : "Continue"}
         </button>
       </form>
     </div>

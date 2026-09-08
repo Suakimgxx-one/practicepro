@@ -7,7 +7,7 @@ from analysis_engine.alignment import AlignmentResult
 from analysis_engine.features import HOP_LENGTH
 
 
-def detect_onsets(waveform: np.ndarray, sr: int, hop_length: int = HOP_LENGTH) -> np.ndarray:
+def detect_onsets(waveform, sr, hop_length=HOP_LENGTH):
     onset_times = librosa.onset.onset_detect(y=waveform, sr=sr, hop_length=hop_length, units="time", backtrack=True)
     return np.asarray(onset_times, dtype=float)
 
@@ -22,28 +22,28 @@ class RhythmDeviationPoint:
 
 @dataclass
 class RhythmComparisonResult:
-    points: list[RhythmDeviationPoint] = field(default_factory=list)
+    points: list = field(default_factory=list)
     unmatched_reference_onsets: int = 0
     unmatched_student_onsets: int = 0
 
     @property
-    def mean_absolute_timing_offset(self) -> float:
+    def mean_absolute_timing_offset(self):
         if not self.points:
             return 0.0
         return float(np.mean([abs(p.timing_offset_seconds) for p in self.points]))
 
     @property
-    def rushed_count(self) -> int:
+    def rushed_count(self):
         return sum(1 for p in self.points if p.timing_offset_seconds < -0.05)
 
     @property
-    def dragged_count(self) -> int:
+    def dragged_count(self):
         return sum(1 for p in self.points if p.timing_offset_seconds > 0.05)
 
-    def flagged_regions(self, threshold_seconds: float = 0.1, max_gap_seconds: float = 1.0) -> list[tuple[float, float]]:
-        regions: list[tuple[float, float]] = []
-        current_start: float | None = None
-        last_time: float | None = None
+    def flagged_regions(self, threshold_seconds=0.1, max_gap_seconds=1.0):
+        regions = []
+        current_start = None
+        last_time = None
         for point in self.points:
             flagged = abs(point.timing_offset_seconds) > threshold_seconds
             if flagged:
@@ -63,9 +63,9 @@ class RhythmComparisonResult:
         return regions
 
 
-def compare_rhythm(reference_onsets: np.ndarray, student_onsets: np.ndarray, alignment: AlignmentResult, max_match_gap: float = 0.3) -> RhythmComparisonResult:
-    points: list[RhythmDeviationPoint] = []
-    used_student_indices: set[int] = set()
+def compare_rhythm(reference_onsets, student_onsets, alignment, max_match_gap=0.3):
+    points = []
+    used_student_indices = set()
     for t_ref in reference_onsets:
         predicted = alignment.reference_to_student(float(t_ref))
         available_indices = [i for i in range(len(student_onsets)) if i not in used_student_indices]

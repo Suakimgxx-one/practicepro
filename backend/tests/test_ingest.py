@@ -5,19 +5,16 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-
 def _write_fake_wav(path, duration_seconds=0.75, sample_rate=16000):
     t = np.linspace(0, duration_seconds, int(sample_rate * duration_seconds), endpoint=False)
     waveform = 0.1 * np.sin(2 * np.pi * 440 * t)
     path.parent.mkdir(parents=True, exist_ok=True)
     sf.write(str(path), waveform, sample_rate)
 
-
 async def _make_user(client):
     email = f"test-{uuid.uuid4().hex[:8]}@example.com"
     response = await client.post("/api/v1/users", json={"email": email})
     return response.json()["id"]
-
 
 @pytest.mark.asyncio
 async def test_youtube_recording_processes_successfully(client, tmp_path):
@@ -32,7 +29,6 @@ async def test_youtube_recording_processes_successfully(client, tmp_path):
     assert body["status"] == "ready"
     assert body["duration_seconds"] == pytest.approx(0.75, abs=0.05)
 
-
 @pytest.mark.asyncio
 async def test_youtube_recording_marks_failed_on_download_error(client):
     user_id = await _make_user(client)
@@ -41,7 +37,6 @@ async def test_youtube_recording_marks_failed_on_download_error(client):
     recording_id = response.json()["id"]
     check = await client.get(f"/api/v1/recordings/{recording_id}")
     assert check.json()["status"] == "failed"
-
 
 @pytest.mark.asyncio
 async def test_youtube_recording_marks_failed_on_invalid_audio(client, tmp_path):
@@ -53,7 +48,6 @@ async def test_youtube_recording_marks_failed_on_invalid_audio(client, tmp_path)
     recording_id = response.json()["id"]
     check = await client.get(f"/api/v1/recordings/{recording_id}")
     assert check.json()["status"] == "failed"
-
 
 @pytest.mark.asyncio
 async def test_upload_source_recording_does_not_trigger_youtube_task(client):

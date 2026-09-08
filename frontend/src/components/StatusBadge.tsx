@@ -1,22 +1,28 @@
 import type { RecordingStatus } from "@/types/recording";
 
 const STATUS_STYLES: Record<RecordingStatus, string> = {
-  pending: "bg-slate-700 text-slate-300",
-  processing: "bg-amber-500/20 text-amber-400",
-  ready: "bg-emerald-500/20 text-emerald-400",
-  failed: "bg-red-500/20 text-red-400",
+  pending: "text-ink-faint",
+  processing: "text-brass-dark",
+  ready: "text-sage",
+  failed: "text-brick",
 };
 
 const STATUS_LABELS: Record<RecordingStatus, string> = {
   pending: "Pending",
-  processing: "Processing…",
+  processing: "Processing",
   ready: "Ready",
   failed: "Failed",
 };
 
 export function StatusBadge({ status }: { status: RecordingStatus }) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[status]}`}>
+    <span className={`inline-flex items-center gap-1.5 text-sm ${STATUS_STYLES[status]}`}>
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${
+          status === "processing" ? "animate-pulse" : ""
+        }`}
+        style={{ backgroundColor: "currentColor" }}
+      />
       {STATUS_LABELS[status]}
     </span>
   );

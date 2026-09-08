@@ -5,10 +5,11 @@ import { StatusBadge } from "@/components/StatusBadge";
 
 interface YoutubeReferenceInputProps {
   userId: string;
+  pieceId?: string;
   onReady: (recordingId: string) => void;
 }
 
-export function YoutubeReferenceInput({ userId, onReady }: YoutubeReferenceInputProps) {
+export function YoutubeReferenceInput({ userId, pieceId, onReady }: YoutubeReferenceInputProps) {
   const [url, setUrl] = useState("");
   const [recordingId, setRecordingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +30,13 @@ export function YoutubeReferenceInput({ userId, onReady }: YoutubeReferenceInput
     setSubmitError(null);
     setSubmitting(true);
     try {
-      const created = await createRecording({ user_id: userId, type: "reference", source: "youtube", source_url: url });
+      const created = await createRecording({
+        user_id: userId,
+        type: "reference",
+        source: "youtube",
+        source_url: url,
+        piece_id: pieceId,
+      });
       setRecordingId(created.id);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to submit URL");
@@ -39,32 +46,38 @@ export function YoutubeReferenceInput({ userId, onReady }: YoutubeReferenceInput
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="font-medium">Reference performance</h2>
+    <div>
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="text-sm font-medium text-ink-soft">Reference performance</h2>
         {recording && <StatusBadge status={recording.status} />}
       </div>
       {!recordingId ? (
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-3">
           <input
             type="url"
             required
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://youtube.com/watch?v=..."
-            className="flex-1 rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:border-slate-500"
+            placeholder="Paste a YouTube link"
+            className="flex-1 bg-transparent border-b border-line pb-2 text-sm outline-none focus:border-brass transition-colors"
           />
-          <button type="submit" disabled={submitting} className="rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 px-4 py-2 text-sm font-medium transition-colors">
-            {submitting ? "Submitting…" : "Submit"}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="text-sm font-medium text-ink hover:text-brass-dark disabled:opacity-50 transition-colors whitespace-nowrap"
+          >
+            {submitting ? "Submitting" : "Add"}
           </button>
         </form>
       ) : (
-        <p className="text-sm text-slate-400 truncate">{url}</p>
+        <p className="text-sm text-ink-soft truncate">{url}</p>
       )}
-      {submitError && <p className="text-red-400 text-sm mt-2">{submitError}</p>}
-      {pollError && <p className="text-red-400 text-sm mt-2">{pollError}</p>}
+      {submitError && <p className="text-brick text-sm mt-2">{submitError}</p>}
+      {pollError && <p className="text-brick text-sm mt-2">{pollError}</p>}
       {recording?.status === "failed" && (
-        <p className="text-red-400 text-sm mt-2">Couldn't process this video — it may be unavailable, or the URL might be invalid.</p>
+        <p className="text-brick text-sm mt-2">
+          Couldn't process this video — it may be unavailable, or the link might be invalid.
+        </p>
       )}
     </div>
   );

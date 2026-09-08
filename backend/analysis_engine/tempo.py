@@ -14,25 +14,25 @@ class TempoRatioPoint:
 
 @dataclass
 class TempoComparisonResult:
-    points: list[TempoRatioPoint] = field(default_factory=list)
+    points: list = field(default_factory=list)
     reference_average_bpm: float | None = None
     student_average_bpm: float | None = None
 
     @property
-    def mean_tempo_ratio(self) -> float:
+    def mean_tempo_ratio(self):
         if not self.points:
             return 1.0
         return float(np.mean([p.local_tempo_ratio for p in self.points]))
 
-    def flagged_regions(self, ratio_threshold: float = 0.15, max_gap_seconds: float = 1.0) -> list[tuple[float, float, str]]:
-        regions: list[tuple[float, float, str]] = []
-        current_start: float | None = None
-        current_label: str | None = None
-        last_time: float | None = None
+    def flagged_regions(self, ratio_threshold=0.15, max_gap_seconds=1.0):
+        regions = []
+        current_start = None
+        current_label = None
+        last_time = None
         for point in self.points:
             deviation = point.local_tempo_ratio - 1.0
             if deviation > ratio_threshold:
-                label: str | None = "dragging"
+                label = "dragging"
             elif deviation < -ratio_threshold:
                 label = "rushing"
             else:
@@ -56,7 +56,7 @@ class TempoComparisonResult:
         return regions
 
 
-def compute_tempo_ratio_curve(alignment: AlignmentResult, sample_interval: float = 0.25) -> list[TempoRatioPoint]:
+def compute_tempo_ratio_curve(alignment, sample_interval=0.25):
     if len(alignment.reference_times) < 2:
         return []
     ref_start = float(alignment.reference_times[0])
@@ -67,7 +67,7 @@ def compute_tempo_ratio_curve(alignment: AlignmentResult, sample_interval: float
     if len(sample_times) < 2:
         sample_times = np.linspace(ref_start, ref_end, 5)
     student_sample_times = np.array([alignment.reference_to_student(t) for t in sample_times])
-    points: list[TempoRatioPoint] = []
+    points = []
     for i in range(len(sample_times) - 1):
         d_ref = sample_times[i + 1] - sample_times[i]
         if d_ref <= 0:
@@ -79,7 +79,7 @@ def compute_tempo_ratio_curve(alignment: AlignmentResult, sample_interval: float
     return points
 
 
-def estimate_average_bpm(waveform: np.ndarray, sr: int) -> float | None:
+def estimate_average_bpm(waveform, sr):
     try:
         tempo, _beat_frames = librosa.beat.beat_track(y=waveform, sr=sr)
         bpm = float(tempo) if np.isscalar(tempo) else float(np.asarray(tempo).flat[0])
@@ -90,7 +90,7 @@ def estimate_average_bpm(waveform: np.ndarray, sr: int) -> float | None:
     return bpm
 
 
-def compare_tempo(reference_waveform: np.ndarray, reference_sr: int, student_waveform: np.ndarray, student_sr: int, alignment: AlignmentResult, sample_interval: float = 0.25) -> TempoComparisonResult:
+def compare_tempo(reference_waveform, reference_sr, student_waveform, student_sr, alignment, sample_interval=0.25):
     points = compute_tempo_ratio_curve(alignment, sample_interval=sample_interval)
     reference_bpm = estimate_average_bpm(reference_waveform, reference_sr)
     student_bpm = estimate_average_bpm(student_waveform, student_sr)

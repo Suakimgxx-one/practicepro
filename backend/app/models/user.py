@@ -17,3 +17,6 @@ class User(Base):
 
     recordings: Mapped[list["Recording"]] = relationship(back_populates="user")
     analysis_sessions: Mapped[list["AnalysisSession"]] = relationship(back_populates="user")
+    pieces: Mapped[list["Piece"]] = relationship(back_populates="user")
+    folders: Mapped[list["Folder"]] = relationship(back_populates="user")
+    practice_sessions: Mapped[list["PracticeSession"]] = relationship(back_populates="user")

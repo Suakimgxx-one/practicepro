@@ -11,6 +11,9 @@ class RecordingCreate(BaseModel):
     type: RecordingType
     source: RecordingSource
     source_url: str | None = Field(default=None, max_length=1024)
+    # Optional: ties this recording to a Piece so it shows up in that
+    # piece's practice history / progress view.
+    piece_id: uuid.UUID | None = None
 
     @model_validator(mode="after")
     def require_url_for_youtube(self) -> "RecordingCreate":
@@ -24,6 +27,7 @@ class RecordingRead(BaseModel):
 
     id: uuid.UUID
     user_id: uuid.UUID
+    piece_id: uuid.UUID | None
     type: RecordingType
     source: RecordingSource
     source_url: str | None

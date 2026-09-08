@@ -14,10 +14,7 @@ class PitchContour:
     voiced: np.ndarray
 
 
-def extract_pitch_contour(
-    waveform: np.ndarray, sr: int, hop_length: int = HOP_LENGTH,
-    fmin: float | None = None, fmax: float | None = None,
-) -> PitchContour:
+def extract_pitch_contour(waveform, sr, hop_length=HOP_LENGTH, fmin=None, fmax=None):
     fmin = fmin or librosa.note_to_hz("C2")
     fmax = fmax or librosa.note_to_hz("C7")
     f0, voiced_flag, _voiced_prob = librosa.pyin(y=waveform, fmin=fmin, fmax=fmax, sr=sr, hop_length=hop_length)
@@ -36,18 +33,18 @@ class PitchDeviationPoint:
 
 @dataclass
 class PitchComparisonResult:
-    points: list[PitchDeviationPoint] = field(default_factory=list)
+    points: list = field(default_factory=list)
 
     @property
-    def mean_absolute_cents_deviation(self) -> float:
+    def mean_absolute_cents_deviation(self):
         if not self.points:
             return 0.0
         return float(np.mean([abs(p.cents_deviation) for p in self.points]))
 
-    def flagged_regions(self, threshold_cents: float = 25.0, max_gap_seconds: float = 0.3) -> list[tuple[float, float]]:
-        regions: list[tuple[float, float]] = []
-        current_start: float | None = None
-        last_time: float | None = None
+    def flagged_regions(self, threshold_cents=25.0, max_gap_seconds=0.3):
+        regions = []
+        current_start = None
+        last_time = None
         for point in self.points:
             flagged = abs(point.cents_deviation) > threshold_cents
             if flagged:
@@ -67,10 +64,10 @@ class PitchComparisonResult:
         return regions
 
 
-def compare_pitch(reference: PitchContour, student: PitchContour, alignment: AlignmentResult, max_time_gap: float = 0.15) -> PitchComparisonResult:
+def compare_pitch(reference, student, alignment, max_time_gap=0.15):
     student_voiced_times = student.times[student.voiced]
     student_voiced_hz = student.frequencies_hz[student.voiced]
-    points: list[PitchDeviationPoint] = []
+    points = []
     if len(student_voiced_times) == 0:
         return PitchComparisonResult(points=points)
     for t_ref, f_ref, is_voiced in zip(reference.times, reference.frequencies_hz, reference.voiced):

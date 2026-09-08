@@ -15,15 +15,15 @@ class LoudnessContour:
     loudness_db: np.ndarray
 
 
-def extract_loudness_contour(waveform: np.ndarray, sr: int, frame_seconds: float = DEFAULT_FRAME_SECONDS, hop_seconds: float = DEFAULT_HOP_SECONDS) -> LoudnessContour:
+def extract_loudness_contour(waveform, sr, frame_seconds=DEFAULT_FRAME_SECONDS, hop_seconds=DEFAULT_HOP_SECONDS):
     meter = pyln.Meter(sr, block_size=frame_seconds)
     frame_samples = int(frame_seconds * sr)
     hop_samples = int(hop_seconds * sr)
-    times: list[float] = []
-    loudness_values: list[float] = []
+    times = []
+    loudness_values = []
     start = 0
     while start + frame_samples <= len(waveform):
-        window = waveform[start : start + frame_samples]
+        window = waveform[start:start + frame_samples]
         try:
             loudness = meter.integrated_loudness(window)
         except Exception:
@@ -48,22 +48,22 @@ class DynamicsDeviationPoint:
 
 @dataclass
 class DynamicsComparisonResult:
-    points: list[DynamicsDeviationPoint] = field(default_factory=list)
+    points: list = field(default_factory=list)
 
     @property
-    def mean_absolute_loudness_difference(self) -> float:
+    def mean_absolute_loudness_difference(self):
         if not self.points:
             return 0.0
         return float(np.mean([abs(p.loudness_difference_db) for p in self.points]))
 
-    def flagged_regions(self, threshold_db: float = 4.0, max_gap_seconds: float = 1.0) -> list[tuple[float, float, str]]:
-        regions: list[tuple[float, float, str]] = []
-        current_start: float | None = None
-        current_label: str | None = None
-        last_time: float | None = None
+    def flagged_regions(self, threshold_db=4.0, max_gap_seconds=1.0):
+        regions = []
+        current_start = None
+        current_label = None
+        last_time = None
         for point in self.points:
             if point.loudness_difference_db > threshold_db:
-                label: str | None = "louder_than_reference"
+                label = "louder_than_reference"
             elif point.loudness_difference_db < -threshold_db:
                 label = "quieter_than_reference"
             else:
@@ -87,11 +87,11 @@ class DynamicsComparisonResult:
         return regions
 
 
-def compare_dynamics(reference: LoudnessContour, student: LoudnessContour, alignment: AlignmentResult, max_time_gap: float = 0.3) -> DynamicsComparisonResult:
+def compare_dynamics(reference, student, alignment, max_time_gap=0.3):
     valid_mask = ~np.isnan(student.loudness_db)
     student_times_valid = student.times[valid_mask]
     student_loudness_valid = student.loudness_db[valid_mask]
-    points: list[DynamicsDeviationPoint] = []
+    points = []
     if len(student_times_valid) == 0:
         return DynamicsComparisonResult(points=points)
     for t_ref, ref_loudness in zip(reference.times, reference.loudness_db):

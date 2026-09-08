@@ -9,8 +9,6 @@ from app.schemas.feedback import FeedbackRead
 
 
 class AnalysisSessionCreate(BaseModel):
-    # NOTE: same no-auth tradeoff as RecordingCreate — user_id is passed
-    # explicitly since there's no session/auth layer yet.
     user_id: uuid.UUID
     reference_recording_id: uuid.UUID
     student_recording_id: uuid.UUID
@@ -38,11 +36,5 @@ class AnalysisResultRead(BaseModel):
 
 
 class AnalysisSessionDetail(AnalysisSessionRead):
-    """
-    Full session view including nested results and feedback — what the
-    frontend polls to render pitch/rhythm/tempo/dynamics charts and
-    coaching text once a session reaches status=complete.
-    """
-
     results: list[AnalysisResultRead] = []
     feedback: list[FeedbackRead] = []

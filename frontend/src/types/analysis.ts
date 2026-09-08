@@ -1,13 +1,50 @@
 export type AnalysisCategory = "pitch" | "rhythm" | "tempo" | "dynamics";
 export type SessionStatus = "pending" | "aligning" | "analyzing" | "complete" | "failed";
 
+// These shapes are deliberately kept in exact sync with the dicts built
+// in backend/worker/tasks/analyze.py's results_payload — that's the one
+// and only place this JSON is produced, so these types should change
+// only if that function's output changes.
+
+export interface FlaggedRegion {
+  start: number;
+  end: number;
+}
+
+export interface LabeledFlaggedRegion extends FlaggedRegion {
+  label: string;
+}
+
+export interface PitchResultData {
+  mean_absolute_cents_deviation: number;
+  flagged_regions: FlaggedRegion[];
+  points: { reference_time: number; cents_deviation: number }[];
+}
+
+export interface RhythmResultData {
+  mean_absolute_timing_offset_seconds: number;
+  unmatched_reference_onsets: number;
+  unmatched_student_onsets: number;
+  flagged_regions: FlaggedRegion[];
+}
+
+export interface TempoResultData {
+  mean_tempo_ratio: number;
+  reference_average_bpm: number | null;
+  student_average_bpm: number | null;
+  flagged_regions: LabeledFlaggedRegion[];
+  points: { reference_time: number; local_tempo_ratio: number }[];
+}
+
+export interface DynamicsResultData {
+  mean_absolute_loudness_difference_db: number;
+  flagged_regions: LabeledFlaggedRegion[];
+}
+
 export interface AnalysisResult {
   id: string;
   session_id: string;
   category: AnalysisCategory;
-  // Shape varies by category — see worker/tasks/analyze.py's
-  // results_payload for the exact structure each category writes.
-  // Charting components (Milestone 12) narrow this per-category.
   data: Record<string, unknown>;
   created_at: string;
 }

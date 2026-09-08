@@ -16,11 +16,6 @@ router = APIRouter(prefix="/analysis-sessions", tags=["analysis"])
 
 
 def _to_detail(session_obj: AnalysisSession) -> AnalysisSessionDetail:
-    # Built explicitly rather than relying on FastAPI's automatic
-    # from_attributes conversion: the ORM relationship is named
-    # `feedback_items` (to avoid shadowing Python's builtin), but the
-    # API exposes it as `feedback` — that name mismatch would silently
-    # drop the field if left to implicit conversion.
     return AnalysisSessionDetail(
         id=session_obj.id,
         user_id=session_obj.user_id,
@@ -37,12 +32,6 @@ def _to_detail(session_obj: AnalysisSession) -> AnalysisSessionDetail:
 async def create_analysis_session(
     payload: AnalysisSessionCreate, db: DBSession
 ) -> AnalysisSessionDetail:
-    """
-    Creates a session (status=pending) and enqueues the full analysis
-    pipeline as a background job: alignment -> pitch/rhythm/tempo/
-    dynamics comparison -> LLM feedback. Poll GET /{id} for progress —
-    status moves pending -> aligning -> analyzing -> complete/failed.
-    """
     session_obj = await analysis_service.create_session(db, payload)
     return _to_detail(session_obj)
 

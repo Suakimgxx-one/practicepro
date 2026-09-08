@@ -5,6 +5,7 @@ export type RecordingStatus = "pending" | "processing" | "ready" | "failed";
 export interface Recording {
   id: string;
   user_id: string;
+  piece_id: string | null;
   type: RecordingType;
   source: RecordingSource;
   source_url: string | null;

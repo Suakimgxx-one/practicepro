@@ -1,5 +1,6 @@
 import type { Recording, User } from "@/types/recording";
 import type { AnalysisSession } from "@/types/analysis";
+import type { Piece, PieceDetail } from "@/types/piece";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -16,7 +17,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
-      ...(init?.body && !(init.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+      ...(init?.body && !(init.body instanceof FormData)
+        ? { "Content-Type": "application/json" }
+        : {}),
       ...init?.headers,
     },
   });
@@ -48,6 +51,7 @@ export async function createRecording(payload: {
   type: "reference" | "student";
   source: "youtube" | "upload";
   source_url?: string;
+  piece_id?: string;
 }): Promise<Recording> {
   return request<Recording>("/api/v1/recordings", { method: "POST", body: JSON.stringify(payload) });
 }
@@ -63,7 +67,10 @@ export async function listRecordings(userId: string): Promise<Recording[]> {
 export async function uploadRecordingAudio(recordingId: string, file: File): Promise<Recording> {
   const formData = new FormData();
   formData.append("file", file);
-  return request<Recording>(`/api/v1/recordings/${recordingId}/upload`, { method: "POST", body: formData });
+  return request<Recording>(`/api/v1/recordings/${recordingId}/upload`, {
+    method: "POST",
+    body: formData,
+  });
 }
 
 export async function createAnalysisSession(payload: {
@@ -79,4 +86,16 @@ export async function createAnalysisSession(payload: {
 
 export async function getAnalysisSession(sessionId: string): Promise<AnalysisSession> {
   return request<AnalysisSession>(`/api/v1/analysis-sessions/${sessionId}`);
+}
+
+export async function createPiece(payload: { user_id: string; title: string }): Promise<Piece> {
+  return request<Piece>("/api/v1/pieces", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export async function listPieces(userId: string): Promise<Piece[]> {
+  return request<Piece[]>(`/api/v1/pieces?user_id=${userId}`);
+}
+
+export async function getPiece(pieceId: string): Promise<PieceDetail> {
+  return request<PieceDetail>(`/api/v1/pieces/${pieceId}`);
 }

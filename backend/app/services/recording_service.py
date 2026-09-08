@@ -5,7 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import InvalidAudioError, NotFoundError, RecordingConflictError
-from app.models.recording import Recording, RecordingSource, RecordingStatus
+from app.models.piece import Piece
+from app.models.recording import Recording, RecordingSource, RecordingStatus, RecordingType
 from app.schemas.recording import RecordingCreate
 from app.services import audio_service, storage_service
 
@@ -13,6 +14,7 @@ from app.services import audio_service, storage_service
 async def create_recording(db: AsyncSession, payload: RecordingCreate) -> Recording:
     recording = Recording(
         user_id=payload.user_id,
+        piece_id=payload.piece_id,
         type=payload.type,
         source=payload.source,
         source_url=payload.source_url,
@@ -20,6 +22,17 @@ async def create_recording(db: AsyncSession, payload: RecordingCreate) -> Record
     db.add(recording)
     await db.commit()
     await db.refresh(recording)
+
+    # Tagging a reference-type recording with a piece_id is how a piece
+    # gets its reference performance set — no separate "attach
+    # reference" call needed. This intentionally only fires for
+    # type=reference; a piece_id on a student attempt just files it
+    # into that piece's practice history (see Piece.attempts).
+    if recording.type == RecordingType.REFERENCE and recording.piece_id is not None:
+        piece = await db.get(Piece, recording.piece_id)
+        if piece is not None:
+            piece.reference_recording_id = recording.id
+            await db.commit()
 
     if recording.source == RecordingSource.YOUTUBE:
         from worker.tasks.ingest import process_youtube_recording

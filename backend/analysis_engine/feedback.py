@@ -7,13 +7,8 @@ from analysis_engine.rhythm import RhythmComparisonResult
 from analysis_engine.tempo import TempoComparisonResult
 
 
-def build_analysis_summary(
-    pitch: PitchComparisonResult | None = None,
-    rhythm: RhythmComparisonResult | None = None,
-    tempo: TempoComparisonResult | None = None,
-    dynamics: DynamicsComparisonResult | None = None,
-) -> dict[str, Any]:
-    summary: dict[str, Any] = {}
+def build_analysis_summary(pitch=None, rhythm=None, tempo=None, dynamics=None):
+    summary = {}
     if pitch is not None:
         summary["pitch"] = {
             "mean_absolute_cents_deviation": round(pitch.mean_absolute_cents_deviation, 1),
@@ -57,37 +52,26 @@ Respond with ONLY a JSON array, no other text, no markdown code fences. Each ele
 Example message style: "Pitch drifts sharp by roughly 30 cents from 0:42 to 0:47 — check the embouchure on the sustained high passage there." Not: "Try to work on your intonation in this section!\""""
 
 
-def generate_feedback(summary: dict[str, Any], client: Any, model: str = "claude-sonnet-4-6") -> list[dict[str, Any]]:
+def generate_feedback(summary, client, model="claude-sonnet-4-6"):
     if not summary:
         return []
-
     response = client.messages.create(
-        model=model,
-        max_tokens=1536,
-        system=FEEDBACK_SYSTEM_PROMPT,
+        model=model, max_tokens=1536, system=FEEDBACK_SYSTEM_PROMPT,
         messages=[{"role": "user", "content": json.dumps(summary)}],
     )
-
     raw_text = "".join(block.text for block in response.content if getattr(block, "type", None) == "text")
-
     try:
         parsed = json.loads(raw_text)
     except json.JSONDecodeError as e:
         raise ValueError(f"Feedback model did not return valid JSON: {raw_text[:200]}") from e
-
     if not isinstance(parsed, list):
         raise ValueError(f"Expected a JSON array of feedback items, got: {type(parsed)}")
-
     valid_categories = {"pitch", "rhythm", "tempo", "dynamics"}
-    feedback_items: list[dict[str, Any]] = []
+    feedback_items = []
     for item in parsed:
         if not isinstance(item, dict) or "category" not in item or "text" not in item:
             continue
         if item["category"] not in valid_categories:
             continue
-        feedback_items.append({
-            "category": item["category"],
-            "text": str(item["text"]),
-            "timestamp_reference": item.get("timestamp_reference"),
-        })
+        feedback_items.append({"category": item["category"], "text": str(item["text"]), "timestamp_reference": item.get("timestamp_reference")})
     return feedback_items
