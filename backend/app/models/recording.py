@@ -30,11 +30,11 @@ class Recording(Base):
     __tablename__ = "recordings"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     # Nullable: recordings created before the Pieces feature existed
     # (or a one-off comparison not attached to any piece) are still
     # valid rows.
-    piece_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("pieces.id"), nullable=True)
+    piece_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("pieces.id"), nullable=True, index=True)
 
     type: Mapped[RecordingType] = mapped_column(
         Enum(RecordingType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),

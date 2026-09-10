@@ -20,8 +20,8 @@ class PracticeSession(Base):
     __tablename__ = "practice_sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    piece_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pieces.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    piece_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pieces.id"), nullable=False, index=True)
 
     focus_section: Mapped[str | None] = mapped_column(String(255), nullable=True)
     session_goal: Mapped[str | None] = mapped_column(String(255), nullable=True)

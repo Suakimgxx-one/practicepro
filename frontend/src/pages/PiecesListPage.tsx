@@ -63,6 +63,24 @@ export function PiecesListPage() {
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
+  const filtered = useMemo(() => {
+    let result = pieces;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(
+        (p) => p.title.toLowerCase().includes(q) || (p.composer ?? "").toLowerCase().includes(q)
+      );
+    }
+    if (activeFolderId) {
+      result = result.filter((p) => p.folder_id === activeFolderId);
+    }
+    const sorted = [...result].sort((a, b) => {
+      if (sortMode === "title") return a.title.localeCompare(b.title);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    return sorted.sort((a, b) => Number(pinnedIds.has(b.id)) - Number(pinnedIds.has(a.id)));
+  }, [pieces, search, sortMode, activeFolderId, pinnedIds]);
+
   if (userLoading) {
     return (
       <div className="min-h-screen bg-surface-950 flex items-center justify-center">
@@ -87,25 +105,6 @@ export function PiecesListPage() {
     await removeFolder(folderId);
     setConfirmingDeleteId(null);
   };
-
-  const filtered = useMemo(() => {
-    let result = pieces;
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      result = result.filter(
-        (p) => p.title.toLowerCase().includes(q) || (p.composer ?? "").toLowerCase().includes(q)
-      );
-    }
-    if (activeFolderId) {
-      result = result.filter((p) => p.folder_id === activeFolderId);
-    }
-    const sorted = [...result].sort((a, b) => {
-      if (sortMode === "title") return a.title.localeCompare(b.title);
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-    // Pinned pieces float to the top, regardless of sort mode.
-    return sorted.sort((a, b) => Number(pinnedIds.has(b.id)) - Number(pinnedIds.has(a.id)));
-  }, [pieces, search, sortMode, activeFolderId, pinnedIds]);
 
   const unfiled = filtered.filter((p) => !p.folder_id);
   const activeFolder = folders.find((f) => f.id === activeFolderId);

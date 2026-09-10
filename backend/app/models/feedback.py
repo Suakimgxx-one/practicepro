@@ -13,7 +13,7 @@ class Feedback(Base):
     __tablename__ = "feedback"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("analysis_sessions.id"), nullable=False)
+    session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("analysis_sessions.id"), nullable=False, index=True)
     category: Mapped[AnalysisCategory] = mapped_column(
         Enum(AnalysisCategory, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,

@@ -1,4 +1,5 @@
 import logging
+import time
 
 import anthropic
 
@@ -19,8 +20,8 @@ from worker.celery_app import celery_app
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(name="analyze.process_analysis_session", bind=True, max_retries=1)
-def process_analysis_session(self, session_id: str) -> None:
+@celery_app.task(name="analyze.process_analysis_session")
+def process_analysis_session(session_id: str) -> None:
     session = SyncSessionLocal()
     try:
         analysis_session = session.get(AnalysisSession, session_id)
@@ -119,7 +120,34 @@ def process_analysis_session(self, session_id: str) -> None:
             summary = build_analysis_summary(pitch_result, rhythm_result, tempo_result, dynamics_result)
             if summary and settings.ANTHROPIC_API_KEY:
                 client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-                feedback_items = generate_feedback(summary, client, model=settings.FEEDBACK_MODEL)
+
+                # A small local retry loop, not a Celery task-level
+                # self.retry() — a task-level retry restarts this whole
+                # function from the top, which would wastefully re-run
+                # the entire DTW alignment and all four comparison
+                # analyses (already done and already committed above)
+                # just to retry one LLM call. A transient API hiccup
+                # only needs the API call itself retried.
+                feedback_items = None
+                last_error: Exception | None = None
+                for attempt in range(2):
+                    try:
+                        feedback_items = generate_feedback(summary, client, model=settings.FEEDBACK_MODEL)
+                        break
+                    except Exception as exc:
+                        last_error = exc
+                        logger.warning(
+                            "Feedback generation attempt %d/2 failed for session %s: %s",
+                            attempt + 1,
+                            session_id,
+                            exc,
+                        )
+                        if attempt == 0:
+                            time.sleep(2)
+
+                if feedback_items is None:
+                    raise last_error or RuntimeError("Feedback generation failed with no captured error")
+
                 for item in feedback_items:
                     session.add(
                         Feedback(
@@ -131,8 +159,14 @@ def process_analysis_session(self, session_id: str) -> None:
                     )
                 session.commit()
         except Exception:
+            # Still non-fatal at this outer level: two failed attempts
+            # means we give up on feedback for this session, but the
+            # measured pitch/rhythm/tempo/dynamics results already
+            # committed above are untouched — the session still
+            # completes successfully, just without coaching text.
             logger.exception(
-                "Feedback generation failed for session %s (non-fatal, results still saved)", session_id
+                "Feedback generation failed for session %s after retries (non-fatal, results still saved)",
+                session_id,
             )
 
         analysis_session.status = SessionStatus.COMPLETE
