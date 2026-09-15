@@ -46,11 +46,18 @@ docker compose exec api pytest -v
 5. The piece's progress view charts pitch accuracy across every
    completed attempt, so improvement (or regression) over time is visible
 
-## Milestones
+## Status
 
-1-10. ✅ Backend: scaffolding through the LLM feedback engine
-11. ✅ Frontend — core flow
-12. ✅ Frontend — visualization (charts + feedback display)
-     + Pieces feature (organize practice by piece, track progress over time)
-     + visual redesign
-13. Deployment
+**Working end-to-end**: piece/folder organization, YouTube + upload
+ingestion, the full analysis pipeline (DTW alignment, pitch, rhythm,
+tempo, dynamics), LLM-grounded coaching feedback, a real persisted
+practice timer, and progress tracking across attempts.
+
+**In progress**: deployment (Railway for the API/worker/Postgres/Redis,
+Vercel for the frontend).
+
+**Not built yet, by design**: real authentication (a `user_id` is
+currently passed explicitly rather than derived from a session — noted
+here rather than hidden), pause/resume on the practice timer (the
+schema only tracks a single start/end pair), metronome, tuner, and
+recording-to-recording comparison.
