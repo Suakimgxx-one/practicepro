@@ -1,4 +1,6 @@
 from functools import lru_cache
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +29,34 @@ class Settings(BaseSettings):
     FEEDBACK_MODEL: str = "claude-sonnet-4-6"
 
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def _ensure_async_driver(cls, v: str) -> str:
+        # Most hosting platforms (Railway, Render, Heroku, Fly.io) hand
+        # you a single plain "postgresql://" connection string via a
+        # DATABASE_URL env var — that's the near-universal convention.
+        # SQLAlchemy's async engine needs the +asyncpg driver suffix
+        # explicit, though, so we insert it here if it's missing. This
+        # means deploying anywhere just requires setting DATABASE_URL
+        # to whatever the host gives you, verbatim — no manual string
+        # surgery, and no dependency on that host's internal variable
+        # naming for individual connection parts (user/password/host).
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
+    @field_validator("DATABASE_URL_SYNC", mode="before")
+    @classmethod
+    def _ensure_sync_driver(cls, v: str) -> str:
+        # Same idea as above, but for the sync engine Celery workers
+        # use (see app/db/session.py) — +psycopg2 instead of +asyncpg.
+        # In practice this means DATABASE_URL and DATABASE_URL_SYNC can
+        # both be set to the exact same host-provided connection
+        # string; each gets the correct driver inserted independently.
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return v
 
 
 @lru_cache
