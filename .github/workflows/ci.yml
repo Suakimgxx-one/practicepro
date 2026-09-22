@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+
+    # Real Postgres and Redis containers, managed natively by GitHub
+    # Actions — not docker-compose-in-CI, which avoids a layer of
+    # networking complexity for something this straightforward. This
+    # runs the exact same 62 tests we've been running manually via
+    # `docker compose exec api pytest -v` throughout this project,
+    # just automatically, on every push.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: practicepro
+          POSTGRES_PASSWORD: practicepro
+          POSTGRES_DB: practicepro
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U practicepro"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Same driver-prefix pattern as production (see
+      # app/core/config.py) — spelled out explicitly here since these
+      # are plain GitHub-managed service containers, not Railway, so
+      # there's no host-provided DATABASE_URL to auto-detect.
+      DATABASE_URL: postgresql+asyncpg://practicepro:practicepro@localhost:5432/practicepro
+      DATABASE_URL_SYNC: postgresql+psycopg2://practicepro:practicepro@localhost:5432/practicepro
+      REDIS_URL: redis://localhost:6379/0
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_RESULT_BACKEND: redis://localhost:6379/1
+      STORAGE_BACKEND: local
+      LOCAL_STORAGE_PATH: /tmp/audio
+      ENVIRONMENT: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install system dependencies
+        # ffmpeg and libsndfile1 are needed by librosa/pyloudnorm for
+        # real audio decoding — the same packages installed in
+        # backend/Dockerfile.prod, just via apt here instead of Docker.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libsndfile1
+
+      - name: Install Python dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Run database migrations
+        working-directory: backend
+        run: alembic upgrade head
+
+      - name: Run tests
+        working-directory: backend
+        run: pytest -v
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Type-check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Build
+        working-directory: frontend
+        run: npx vite build
